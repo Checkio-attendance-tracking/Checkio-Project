@@ -1,0 +1,80 @@
+import { prisma } from "../config/database";
+import { Prisma } from "@prisma/client";
+import { startOfDay, endOfDay } from "date-fns";
+
+export class AttendanceRepository {
+  async findByDate(companyId: string, employeeId: string, date: Date) {
+    const start = startOfDay(date);
+    const end = endOfDay(date);
+
+    return prisma.attendance.findFirst({
+      where: {
+        companyId,
+        employeeId,
+        date: {
+          gte: start,
+          lte: end
+        }
+      }
+    });
+  }
+
+  async findAllByEmployee(companyId: string, employeeId: string) {
+    return prisma.attendance.findMany({
+      where: { companyId, employeeId },
+      orderBy: { date: 'desc' }
+    });
+  }
+
+  async findAllByCompany(companyId: string, date?: Date, employeeId?: string) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const where: any = { companyId };
+    if (date) {
+      where.date = {
+        gte: startOfDay(date),
+        lte: endOfDay(date)
+      };
+    }
+    if (employeeId) {
+      where.employeeId = employeeId;
+    }
+    
+    return prisma.attendance.findMany({
+      where,
+      include: { employee: true },
+      orderBy: { date: 'desc' }
+    });
+  }
+
+  async create(companyId: string, data: Omit<Prisma.AttendanceUncheckedCreateInput, 'companyId'>) {
+    return prisma.attendance.create({
+      data: {
+        ...data,
+        companyId
+      }
+    });
+  }
+
+  async update(id: string, data: Prisma.AttendanceUncheckedUpdateInput, companyId?: string) {
+    if (companyId) {
+      const record = await prisma.attendance.findFirst({
+        where: { id, companyId }
+      });
+      if (!record) throw new Error("Attendance record not found");
+    }
+
+    return prisma.attendance.update({
+      where: { id },
+      data
+    });
+  }
+
+  async delete(companyId: string, id: string) {
+    const record = await prisma.attendance.findFirst({
+      where: { id, companyId }
+    });
+    if (!record) throw new Error("Attendance record not found");
+
+    return prisma.attendance.delete({ where: { id } });
+  }
+}

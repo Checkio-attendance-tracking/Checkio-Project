@@ -1,0 +1,95 @@
+import { AttendanceRepository } from "../repositories/AttendanceRepository";
+import { EmployeeRepository } from "../repositories/EmployeeRepository";
+import { startOfDay } from "date-fns";
+
+const attendanceRepo = new AttendanceRepository();
+const employeeRepo = new EmployeeRepository();
+
+export class AttendanceService {
+  // Employee methods
+  async markAttendance(companyId: string, employeeId: string, type: 'checkIn' | 'lunchStart' | 'lunchEnd' | 'checkOut') {
+    const today = new Date();
+    
+    // Check if employee exists and belongs to company
+    const employee = await employeeRepo.findById(companyId, employeeId);
+    if (!employee) throw new Error("Employee not found");
+
+    // Find today's record
+    const record = await attendanceRepo.findByDate(companyId, employeeId, today);
+
+    if (!record) {
+      // Create new record only if type is checkIn
+      if (type !== 'checkIn') {
+        throw new Error("Must check-in first");
+      }
+
+      return attendanceRepo.create(companyId, {
+        employeeId,
+        date: startOfDay(today),
+        checkIn: today
+      });
+    }
+
+    // Update existing record
+    // Validate sequence
+    if (type === 'checkIn') {
+      throw new Error("Already checked in today");
+    }
+
+    if (type === 'lunchStart') {
+      if (!record.checkIn) throw new Error("Must check-in first");
+      if (record.lunchStart) throw new Error("Already started lunch");
+      if (record.checkOut) throw new Error("Already checked out");
+      
+      return attendanceRepo.update(record.id, { lunchStart: today });
+    }
+
+    if (type === 'lunchEnd') {
+      if (!record.lunchStart) throw new Error("Must start lunch first");
+      if (record.lunchEnd) throw new Error("Already ended lunch");
+      if (record.checkOut) throw new Error("Already checked out");
+
+      return attendanceRepo.update(record.id, { lunchEnd: today });
+    }
+
+    if (type === 'checkOut') {
+      if (!record.checkIn) throw new Error("Must check-in first");
+      if (record.checkOut) throw new Error("Already checked out");
+      // Optional: enforce lunch sequence completion?
+      
+      return attendanceRepo.update(record.id, { checkOut: today });
+    }
+  }
+
+  async getMyHistory(companyId: string, employeeId: string) {
+    return attendanceRepo.findAllByEmployee(companyId, employeeId);
+  }
+
+  // HR methods
+  async getAll(companyId: string, date?: string, employeeId?: string) {
+    const queryDate = date ? new Date(date) : undefined;
+    return attendanceRepo.findAllByCompany(companyId, queryDate, employeeId);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async create(companyId: string, data: any) {
+    // Validate that employee belongs to company
+    const employee = await employeeRepo.findById(companyId, data.employeeId);
+    if (!employee) throw new Error("Employee not found");
+
+    // Check for existing record for this date/employee
+    const existing = await attendanceRepo.findByDate(companyId, data.employeeId, data.date);
+    if (existing) throw new Error("Attendance record already exists for this date");
+
+    return attendanceRepo.create(companyId, data);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async update(companyId: string, id: string, data: any) {
+    return attendanceRepo.update(id, data, companyId);
+  }
+
+  async delete(companyId: string, id: string) {
+    return attendanceRepo.delete(companyId, id);
+  }
+}

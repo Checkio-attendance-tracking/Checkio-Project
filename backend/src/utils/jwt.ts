@@ -1,0 +1,22 @@
+import jwt from "jsonwebtoken";
+
+const SECRET = process.env.JWT_SECRET || "default_secret";
+
+export interface TokenPayload {
+  userId: string;
+  companyId: string;
+  role: string;
+  employeeId?: string | null;
+}
+
+export const generateToken = (payload: TokenPayload): string => {
+  return jwt.sign(payload, SECRET, { expiresIn: "24h" });
+};
+
+export const verifyToken = (token: string): TokenPayload | null => {
+  try {
+    return jwt.verify(token, SECRET) as TokenPayload;
+  } catch {
+    return null;
+  }
+};
