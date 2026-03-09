@@ -1,12 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, ArrowLeft, Calendar, Download } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowLeft, Calendar, Download, MapPin, X } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, getDay, parseISO, isSameDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { employeeService } from '../../services/employee';
 import { attendanceService } from '../../services/attendance';
 import type { User } from '../../types/user';
 import type { AttendanceRecord } from '../../types/attendance';
+import { AttendanceMap } from '../../components/AttendanceMap';
 
 export function EmployeeHistory() {
   const { id } = useParams();
@@ -15,6 +16,7 @@ export function EmployeeHistory() {
   const [employee, setEmployee] = useState<User | null>(null);
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedRecord, setSelectedRecord] = useState<AttendanceRecord | null>(null);
 
   const loadData = async () => {
     setLoading(true);
@@ -152,7 +154,7 @@ export function EmployeeHistory() {
   };
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="space-y-6 pb-8 relative">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -200,28 +202,28 @@ export function EmployeeHistory() {
             </div>
 
             {/* Grid del Calendario */}
-              <div className="p-6">
-                  <div className="grid grid-cols-7 gap-px mb-2">
-                      {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map(d => (
-                          <div key={d} className="text-center text-sm font-medium text-gray-500 py-2">
-                              {d}
-                          </div>
-                      ))}
-                  </div>
-                  <div className="grid grid-cols-7 gap-2">
-                      {/* Espacios vacíos */}
-                      {Array.from({ length: emptyDays }).map((_, i) => (
-                          <div key={`empty-${i}`} className="h-32 bg-gray-50/50 rounded-lg border border-transparent" />
-                      ))}
-                      
-                      {/* Días */}
-                      {daysInMonth.map(day => {
-                          const record = getRecordForDate(day);
-                          const isToday = isSameDay(day, new Date());
-                          
-                          return (
-                              <div 
-                                  key={day.toISOString()}
+            <div className="p-6">
+                <div className="grid grid-cols-7 gap-px mb-2">
+                    {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map(d => (
+                        <div key={d} className="text-center text-sm font-medium text-gray-500 py-2">
+                            {d}
+                        </div>
+                    ))}
+                </div>
+                <div className="grid grid-cols-7 gap-2">
+                    {/* Espacios vacíos */}
+                    {Array.from({ length: emptyDays }).map((_, i) => (
+                        <div key={`empty-${i}`} className="h-32 bg-gray-50/50 rounded-lg border border-transparent" />
+                    ))}
+                    
+                    {/* Días */}
+                    {daysInMonth.map(day => {
+                        const record = getRecordForDate(day);
+                        const isToday = isSameDay(day, new Date());
+                        
+                        return (
+                            <div 
+                                key={day.toISOString()}
                                 className={`h-32 p-2 rounded-lg border flex flex-col justify-between transition-all hover:shadow-md ${
                                     isToday ? 'border-indigo-500 ring-1 ring-indigo-500 bg-white' : 'border-gray-100 bg-white'
                                 }`}
@@ -233,11 +235,23 @@ export function EmployeeHistory() {
                                         {format(day, 'd')}
                                     </span>
                                     {record && record.status !== 'weekend' && (
-                                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium capitalize ${getStatusColor(record.status)}`}>
-                                            {record.status === 'present' ? 'Asistió' : 
-                                             record.status === 'late' ? 'Tardanza' :
-                                             record.status === 'absent' ? 'Falta' : record.status}
-                                        </span>
+                                        <div className="flex items-center gap-1">
+                                            {/* Botón de Mapa */}
+                                            {(record.latCheckIn || record.latCheckOut) && (
+                                                <button 
+                                                    onClick={() => setSelectedRecord(record)}
+                                                    className="text-gray-400 hover:text-indigo-600 transition-colors"
+                                                    title="Ver ubicación"
+                                                >
+                                                    <MapPin size={14} />
+                                                </button>
+                                            )}
+                                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium capitalize ${getStatusColor(record.status)}`}>
+                                                {record.status === 'present' ? 'Asistió' : 
+                                                 record.status === 'late' ? 'Tardanza' :
+                                                 record.status === 'absent' ? 'Falta' : record.status}
+                                            </span>
+                                        </div>
                                     )}
                                 </div>
 
@@ -306,6 +320,37 @@ export function EmployeeHistory() {
             </div>
         </div>
       </div>
+
+      {/* Modal de Mapa */}
+      {selectedRecord && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                <div className="flex items-center justify-between p-4 border-b border-gray-100">
+                    <div>
+                        <h3 className="text-lg font-bold text-gray-900">Ubicación de Marcaciones</h3>
+                        <p className="text-sm text-gray-500">{format(parseISO(selectedRecord.date), "EEEE d 'de' MMMM, yyyy", { locale: es })}</p>
+                    </div>
+                    <button 
+                        onClick={() => setSelectedRecord(null)}
+                        className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500 hover:text-gray-700"
+                    >
+                        <X size={24} />
+                    </button>
+                </div>
+                <div className="p-4 bg-gray-50">
+                    <AttendanceMap record={selectedRecord} />
+                </div>
+                <div className="p-4 border-t border-gray-100 flex justify-end">
+                    <button 
+                        onClick={() => setSelectedRecord(null)}
+                        className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+                    >
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 }

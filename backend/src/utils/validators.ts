@@ -19,6 +19,10 @@ export const updateEmployeeSchema = createEmployeeSchema.partial();
 
 export const markAttendanceSchema = z.object({
   type: z.enum(["checkIn", "lunchStart", "lunchEnd", "checkOut"]),
+  location: z.object({
+    lat: z.number(),
+    lng: z.number()
+  }).optional(),
 });
 
 export const createAttendanceSchema = z.object({

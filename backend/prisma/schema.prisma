@@ -14,6 +14,13 @@ model Company {
   id        String       @id @default(uuid())
   name      String
   createdAt DateTime     @default(now())
+  
+  // Geofencing settings
+  geofenceEnabled Boolean  @default(false)
+  geofenceLat     Float?
+  geofenceLng     Float?
+  geofenceRadius  Int?     @default(100) // meters
+
   users     User[]
   employees Employee[]
   attendances Attendance[]
@@ -64,10 +71,23 @@ model Attendance {
   employeeId        String
   employee          Employee  @relation(fields: [employeeId], references: [id])
   date              DateTime
+  
   checkIn           DateTime?
+  latCheckIn        Float?
+  lngCheckIn        Float?
+
   lunchStart        DateTime?
+  latLunchStart     Float?
+  lngLunchStart     Float?
+
   lunchEnd          DateTime?
+  latLunchEnd       Float?
+  lngLunchEnd       Float?
+
   checkOut          DateTime?
+  latCheckOut       Float?
+  lngCheckOut       Float?
+
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 

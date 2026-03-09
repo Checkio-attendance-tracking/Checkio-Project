@@ -17,9 +17,13 @@ interface DashboardProps {
 export function Dashboard({ user, onLogout }: DashboardProps) {
   const { time, loading, error, isVerified } = usePeruTime();
   const [lastAction, setLastAction] = useState<{ type: string; time: Date } | null>(null);
+  const [isMarking, setIsMarking] = useState(false);
   const navigate = useNavigate();
 
   const handleAction = async (actionLabel: string) => {
+    if (isMarking) return;
+    setIsMarking(true);
+
     let type: 'checkIn' | 'lunchStart' | 'lunchEnd' | 'checkOut';
     
     switch (actionLabel) {
@@ -27,7 +31,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
       case 'Salida al Almuerzo': type = 'lunchStart'; break;
       case 'Regreso del Almuerzo': type = 'lunchEnd'; break;
       case 'Salida': type = 'checkOut'; break;
-      default: return;
+      default: setIsMarking(false); return;
     }
 
     try {
@@ -37,7 +41,9 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error(error);
-      alert(error.response?.data?.message || 'Error al marcar asistencia');
+      alert(error.response?.data?.message || 'Error al marcar asistencia. Verifique que ha permitido el acceso a su ubicación.');
+    } finally {
+      setIsMarking(false);
     }
   };
 
@@ -95,7 +101,19 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
           </section>
 
           {/* Feedback Section */}
-          {lastAction && (
+          {isMarking && (
+            <div className="bg-indigo-50 border border-indigo-100 text-indigo-800 px-4 py-3 rounded-lg flex items-center justify-between animate-pulse">
+              <span className="font-medium flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                Procesando registro...
+              </span>
+              <span className="text-sm opacity-75">
+                Obteniendo ubicación...
+              </span>
+            </div>
+          )}
+
+          {!isMarking && lastAction && (
             <div className="bg-indigo-50 border border-indigo-100 text-indigo-800 px-4 py-3 rounded-lg flex items-center justify-between animate-fade-in">
               <span className="font-medium">
                 Último registro: <span className="font-bold">{lastAction.type}</span>

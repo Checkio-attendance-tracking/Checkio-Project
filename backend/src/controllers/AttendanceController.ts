@@ -7,7 +7,7 @@ const attendanceService = new AttendanceService();
 export class AttendanceController {
   async mark(req: Request, res: Response) {
     try {
-      const { type } = markAttendanceSchema.parse(req.body);
+      const { type, location } = markAttendanceSchema.parse(req.body);
       const employeeId = req.user!.employeeId;
       
       if (!employeeId) {
@@ -18,7 +18,8 @@ export class AttendanceController {
       const result = await attendanceService.markAttendance(
         req.user!.companyId,
         employeeId,
-        type
+        type,
+        location
       );
       res.json(result);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

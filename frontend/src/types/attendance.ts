@@ -3,9 +3,17 @@ export interface AttendanceRecord {
   employeeId: string;
   date: string; // YYYY-MM-DD
   checkIn?: string; // HH:mm
+  latCheckIn?: number;
+  lngCheckIn?: number;
   lunchStart?: string; // HH:mm
+  latLunchStart?: number;
+  lngLunchStart?: number;
   lunchEnd?: string; // HH:mm
+  latLunchEnd?: number;
+  lngLunchEnd?: number;
   checkOut?: string; // HH:mm
+  latCheckOut?: number;
+  lngCheckOut?: number;
   status: 'present' | 'absent' | 'late' | 'vacation' | 'weekend';
 }
 

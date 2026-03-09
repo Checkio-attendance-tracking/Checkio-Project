@@ -2,6 +2,35 @@ import api from './api';
 import { format } from 'date-fns';
 import type { AttendanceRecord } from '../types/attendance';
 
+const getCurrentPosition = (): Promise<{lat: number, lng: number} | undefined> => {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) {
+      console.warn("Geolocation is not supported by this browser.");
+      resolve(undefined);
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolve({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        });
+      },
+      (error) => {
+        console.error("Error getting location:", error);
+        // If location is mandatory for geofencing, the backend will reject it.
+        // We resolve undefined here so the request proceeds.
+        resolve(undefined);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
+      }
+    );
+  });
+};
+
 export const attendanceService = {
   async mark(type: 'checkIn' | 'lunchStart' | 'lunchEnd' | 'checkOut') {
     const endpoints = {
@@ -11,7 +40,8 @@ export const attendanceService = {
       checkOut: '/asistencias/salida-final'
     };
     
-    const response = await api.post<AttendanceRecord>(endpoints[type], {});
+    const location = await getCurrentPosition();
+    const response = await api.post<AttendanceRecord>(endpoints[type], { location });
     return response.data;
   },
 
@@ -37,10 +67,7 @@ export const attendanceService = {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response = await api.get<any[]>('/asistencias', { params });
-    // console.log('AttendanceService getAll response:', response.data);
-    const mapped = response.data.map(mapBackendAttendanceToFrontend);
-    // console.log('AttendanceService getAll mapped:', mapped);
-    return mapped;
+    return response.data.map(mapBackendAttendanceToFrontend);
   },
   
   // Admin methods
@@ -67,10 +94,23 @@ function mapBackendAttendanceToFrontend(record: any): AttendanceRecord { // esli
     id: record.id,
     employeeId: record.employeeId,
     date: record.date.split('T')[0],
+    
     checkIn: formatTime(record.checkIn),
+    latCheckIn: record.latCheckIn,
+    lngCheckIn: record.lngCheckIn,
+    
     lunchStart: formatTime(record.lunchStart),
+    latLunchStart: record.latLunchStart,
+    lngLunchStart: record.lngLunchStart,
+    
     lunchEnd: formatTime(record.lunchEnd),
+    latLunchEnd: record.latLunchEnd,
+    lngLunchEnd: record.lngLunchEnd,
+    
     checkOut: formatTime(record.checkOut),
+    latCheckOut: record.latCheckOut,
+    lngCheckOut: record.lngCheckOut,
+    
     status: record.checkIn ? 'present' : 'absent' // Simplistic status
   };
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Logo } from '../../components/Logo';
-import { Users, LogOut, Settings, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Users, LogOut, Settings, Menu, X } from 'lucide-react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 interface AdminLayoutProps {
@@ -13,6 +13,7 @@ export function AdminLayout({ onLogout }: AdminLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const menuItems = [
+    { icon: <LayoutDashboard size={20} />, label: 'Dashboard', path: '/admin' },
     { icon: <Users size={20} />, label: 'Planilla', path: '/admin/employees' },
     { icon: <Settings size={20} />, label: 'Configuración', path: '/admin/settings' },
   ];

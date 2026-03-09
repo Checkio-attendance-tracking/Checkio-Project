@@ -6,6 +6,7 @@ import { AdminLayout } from './pages/admin/AdminLayout';
 import { EmployeeList } from './pages/admin/EmployeeList';
 import { CreateEmployee } from './pages/admin/CreateEmployee';
 import { EmployeeHistory } from './pages/admin/EmployeeHistory';
+import { CompanySettingsPage } from './pages/admin/CompanySettings';
 import { authService } from './services/auth';
 import type { User } from './types/user';
 
@@ -66,7 +67,7 @@ function App() {
           <Route path="employees/new" element={<CreateEmployee />} />
           <Route path="employees/:id/edit" element={<CreateEmployee />} />
           <Route path="employees/:id/history" element={<EmployeeHistory />} />
-          <Route path="settings" element={<div className="p-8 text-gray-500">Configuración del sistema (Próximamente)</div>} />
+          <Route path="settings" element={<CompanySettingsPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
