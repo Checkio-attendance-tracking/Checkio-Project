@@ -1,22 +1,7 @@
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { AttendanceRecord } from '../types/attendance';
+import type { AttendanceRecord } from '../types/attendance';
 import L from 'leaflet';
-
-// Fix for default marker icon issues in React Leaflet
-// We'll use a custom icon setup or just rely on the default if it works, 
-// but often the default icon is broken in webpack/vite builds without this fix.
-import icon from 'leaflet/dist/images/marker-icon.png';
-import iconShadow from 'leaflet/dist/images/marker-shadow.png';
-
-const DefaultIcon = L.icon({
-    iconUrl: icon,
-    shadowUrl: iconShadow,
-    iconSize: [25, 41],
-    iconAnchor: [12, 41]
-});
-
-L.Marker.prototype.options.icon = DefaultIcon;
 
 interface AttendanceMapProps {
   record: AttendanceRecord;

@@ -1,5 +1,5 @@
 import { EmployeeRepository } from "../repositories/EmployeeRepository";
-// import { Prisma } from "@prisma/client";
+import { prisma } from "../config/database";
 
 const employeeRepo = new EmployeeRepository();
 
@@ -16,6 +16,22 @@ export class EmployeeService {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async create(companyId: string, data: any) {
+    // Check Company Limits
+    const company = await prisma.company.findUnique({
+      where: { id: companyId },
+      include: { _count: { select: { employees: true } } }
+    });
+
+    if (!company) throw new Error("Company not found");
+
+    if (company.status !== 'active') {
+      throw new Error("Company is not active");
+    }
+
+    if (company._count.employees >= company.maxEmployees) {
+      throw new Error(`Employee limit reached (${company.maxEmployees})`);
+    }
+
     // Validate uniqueness of documentId within company?
     if (data.documentId) {
       const existing = await employeeRepo.findByDocument(companyId, data.documentId);
@@ -24,6 +40,7 @@ export class EmployeeService {
 
     return employeeRepo.create(companyId, data);
   }
+
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async update(companyId: string, id: string, data: any) {

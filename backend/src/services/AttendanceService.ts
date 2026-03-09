@@ -91,7 +91,7 @@ export class AttendanceService {
         lunchStart: today,
         latLunchStart: location?.lat,
         lngLunchStart: location?.lng
-      });
+      }, companyId);
     }
 
     if (type === 'lunchEnd') {
@@ -103,7 +103,7 @@ export class AttendanceService {
         lunchEnd: today,
         latLunchEnd: location?.lat,
         lngLunchEnd: location?.lng
-      });
+      }, companyId);
     }
 
     if (type === 'checkOut') {
@@ -115,7 +115,7 @@ export class AttendanceService {
         checkOut: today,
         latCheckOut: location?.lat,
         lngCheckOut: location?.lng
-      });
+      }, companyId);
     }
   }
 
@@ -127,6 +127,12 @@ export class AttendanceService {
   async getAll(companyId: string, date?: string, employeeId?: string) {
     const queryDate = date ? new Date(date) : undefined;
     return attendanceRepo.findAllByCompany(companyId, queryDate, employeeId);
+  }
+
+  async getById(companyId: string, id: string) {
+    const record = await attendanceRepo.findById(companyId, id);
+    if (!record) throw new Error("Attendance record not found");
+    return record;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

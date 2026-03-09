@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Save, MapPin } from 'lucide-react';
-import { companyService, CompanySettings } from '../../services/company';
+import { companyService } from '../../services/company';
+import type { CompanySettings } from '../../services/company';
 
 export function CompanySettingsPage() {
   const [settings, setSettings] = useState<CompanySettings>({

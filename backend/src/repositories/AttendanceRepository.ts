@@ -19,6 +19,13 @@ export class AttendanceRepository {
     });
   }
 
+  async findById(companyId: string, id: string) {
+    return prisma.attendance.findFirst({
+      where: { id, companyId },
+      include: { employee: true }
+    });
+  }
+
   async findAllByEmployee(companyId: string, employeeId: string) {
     return prisma.attendance.findMany({
       where: { companyId, employeeId },

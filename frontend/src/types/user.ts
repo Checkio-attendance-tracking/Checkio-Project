@@ -16,7 +16,7 @@ export interface User {
   department: string; // Representa el Puesto de Trabajo (Job Title)
   
   // Sistema
-  role: 'admin' | 'employee';
+  role: 'admin' | 'employee' | 'superadmin';
   status: 'active' | 'inactive';
   avatar?: string;
 }

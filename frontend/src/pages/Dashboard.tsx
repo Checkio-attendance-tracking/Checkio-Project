@@ -68,7 +68,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                 <button 
                   onClick={() => navigate('/admin')}
                   className="p-1.5 bg-white rounded-full text-gray-400 hover:text-indigo-600 shadow-sm transition-colors"
-                  title="Configuración y Administración"
+                  title="Configuración y RRHH"
                 >
                   <Settings size={14} />
                 </button>

@@ -6,7 +6,13 @@ import { AdminLayout } from './pages/admin/AdminLayout';
 import { EmployeeList } from './pages/admin/EmployeeList';
 import { CreateEmployee } from './pages/admin/CreateEmployee';
 import { EmployeeHistory } from './pages/admin/EmployeeHistory';
+import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { CompanySettingsPage } from './pages/admin/CompanySettings';
+import { SuperAdminLayout } from './pages/superadmin/SuperAdminLayout';
+import { CompanyList } from './pages/superadmin/CompanyList';
+import { CreateCompany } from './pages/superadmin/CreateCompany';
+import { EditCompany } from './pages/superadmin/EditCompany';
+import { CreateCompanyUser } from './pages/superadmin/CreateCompanyUser';
 import { authService } from './services/auth';
 import type { User } from './types/user';
 
@@ -54,20 +60,33 @@ function App() {
     return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;
   }
 
+  const getHomeRoute = (user: User) => {
+    if (user.role === 'superadmin') return '/superadmin/companies';
+    return '/dashboard';
+  };
+
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={!user ? <Login onLogin={setUser} /> : <Navigate to="/dashboard" replace />} />
+        <Route path="/" element={!user ? <Login onLogin={setUser} /> : <Navigate to={getHomeRoute(user)} replace />} />
         
-        <Route path="/dashboard" element={user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/" replace />} />
+        <Route path="/dashboard" element={user && user.role !== 'superadmin' ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/" replace />} />
         
         <Route path="/admin" element={user && user.role === 'admin' ? <AdminLayout onLogout={handleLogout} /> : <Navigate to="/" replace />}>
-          <Route index element={<Navigate to="employees" replace />} />
+          <Route index element={<AdminDashboard />} />
           <Route path="employees" element={<EmployeeList />} />
           <Route path="employees/new" element={<CreateEmployee />} />
           <Route path="employees/:id/edit" element={<CreateEmployee />} />
           <Route path="employees/:id/history" element={<EmployeeHistory />} />
           <Route path="settings" element={<CompanySettingsPage />} />
+        </Route>
+
+        <Route path="/superadmin" element={user && user.role === 'superadmin' ? <SuperAdminLayout onLogout={handleLogout} /> : <Navigate to="/" replace />}>
+          <Route index element={<Navigate to="companies" replace />} />
+          <Route path="companies" element={<CompanyList />} />
+          <Route path="companies/new" element={<CreateCompany />} />
+          <Route path="companies/:id/edit" element={<EditCompany />} />
+          <Route path="companies/:id/users/new" element={<CreateCompanyUser />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

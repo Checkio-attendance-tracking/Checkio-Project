@@ -1,20 +1,19 @@
 import { useState } from 'react';
-import { LayoutDashboard, Users, LogOut, Settings, Menu, X } from 'lucide-react';
+import { Logo } from '../../components/Logo';
+import { Building2, LogOut, Menu, X } from 'lucide-react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 
-interface AdminLayoutProps {
+interface SuperAdminLayoutProps {
   onLogout: () => void;
 }
 
-export function AdminLayout({ onLogout }: AdminLayoutProps) {
+export function SuperAdminLayout({ onLogout }: SuperAdminLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const menuItems = [
-    { icon: <LayoutDashboard size={20} />, label: 'Dashboard', path: '/admin' },
-    { icon: <Users size={20} />, label: 'Planilla', path: '/admin/employees' },
-    { icon: <Settings size={20} />, label: 'Configuración', path: '/admin/settings' },
+    { icon: <Building2 size={20} />, label: 'Empresas', path: '/superadmin/companies' },
   ];
 
   return (
@@ -22,8 +21,8 @@ export function AdminLayout({ onLogout }: AdminLayoutProps) {
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between z-20">
         <div className="flex items-center space-x-3 cursor-pointer" onClick={() => navigate('/')}>
-          <img src="/checkio-logo.svg" alt="Checkio" className="h-7 w-auto" />
-          <span className="text-lg font-bold text-gray-800">Checkio</span>
+          <Logo size={28} />
+          <span className="text-lg font-bold text-gray-800">Checkio SuperAdmin</span>
         </div>
         <button 
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -48,17 +47,17 @@ export function AdminLayout({ onLogout }: AdminLayoutProps) {
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         <div className="p-6 border-b border-gray-100 hidden lg:flex items-center space-x-3 cursor-pointer" onClick={() => navigate('/')}>
-          <img src="/checkio-logo.svg" alt="Checkio" className="h-8 w-auto" />
-          <span className="text-xl font-bold text-gray-800">Checkio</span>
+          <Logo size={32} />
+          <span className="text-xl font-bold text-gray-800">SuperAdmin</span>
         </div>
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto mt-16 lg:mt-0">
           <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-            Gestión RRHH
+            Gestión SaaS
           </div>
           
           {menuItems.map((item) => {
-            const isActive = location.pathname === item.path;
+            const isActive = location.pathname.startsWith(item.path);
             return (
               <Link
                 key={item.path}

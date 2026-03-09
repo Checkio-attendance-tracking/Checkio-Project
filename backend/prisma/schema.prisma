@@ -15,6 +15,11 @@ model Company {
   name      String
   createdAt DateTime     @default(now())
   
+  // Subscription / Limits
+  maxEmployees Int      @default(10)
+  status       String   @default("active") // active, inactive, suspended
+  suspendedAt  DateTime?
+
   // Geofencing settings
   geofenceEnabled Boolean  @default(false)
   geofenceLat     Float?
@@ -30,12 +35,12 @@ model Company {
 
 model User {
   id           String    @id @default(uuid())
-  companyId    String
-  company      Company   @relation(fields: [companyId], references: [id])
+  companyId    String?
+  company      Company?   @relation(fields: [companyId], references: [id])
   name         String
   email        String    @unique
   passwordHash String
-  role         String    // "admin" | "employee"
+  role         String    // "admin" | "employee" | "superadmin"
   employeeId   String?   @unique
   employee     Employee? @relation(fields: [employeeId], references: [id])
   createdAt    DateTime  @default(now())

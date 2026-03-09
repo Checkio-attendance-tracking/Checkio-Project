@@ -1,13 +1,15 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, ArrowLeft, Calendar, Download, MapPin, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowLeft, Calendar, Download, MapPin, X, Map, Pencil } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, getDay, parseISO, isSameDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { employeeService } from '../../services/employee';
 import { attendanceService } from '../../services/attendance';
 import type { User } from '../../types/user';
 import type { AttendanceRecord } from '../../types/attendance';
-import { AttendanceMap } from '../../components/AttendanceMap';
+
+// Lazy load the map component to prevent Leaflet initialization issues during startup
+const AttendanceMap = lazy(() => import('../../components/AttendanceMap').then(module => ({ default: module.AttendanceMap })));
 
 export function EmployeeHistory() {
   const { id } = useParams();
@@ -17,6 +19,8 @@ export function EmployeeHistory() {
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRecord, setSelectedRecord] = useState<AttendanceRecord | null>(null);
+  const [editingRecord, setEditingRecord] = useState<AttendanceRecord | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const loadData = async () => {
     setLoading(true);
@@ -75,6 +79,65 @@ export function EmployeeHistory() {
 
   const handlePrevMonth = () => setCurrentMonth(prev => subMonths(prev, 1));
   const handleNextMonth = () => setCurrentMonth(prev => addMonths(prev, 1));
+
+  const handleExport = () => {
+    if (records.length === 0) return;
+    
+    const headers = ['Fecha', 'Estado', 'Ingreso', 'Salida Almuerzo', 'Regreso Almuerzo', 'Salida', 'Horas Trabajadas'];
+    const csvContent = [
+      headers.join(','),
+      ...records.map(r => [
+        r.date,
+        r.status,
+        r.checkIn || '',
+        r.lunchStart || '',
+        r.lunchEnd || '',
+        r.checkOut || '',
+        calculateHoursWorked(r)
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `asistencia_${employee?.firstName || 'emp'}_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleUpdateRecord = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editingRecord || !id) return;
+
+    setIsUpdating(true);
+    const formData = new FormData(e.currentTarget);
+    
+    // Helper to combine date and time
+    const combineDateTime = (timeStr: string) => {
+        if (!timeStr) return undefined;
+        return `${editingRecord.date}T${timeStr}:00`;
+    };
+
+    const updateData = {
+        checkIn: combineDateTime(formData.get('checkIn') as string),
+        lunchStart: combineDateTime(formData.get('lunchStart') as string),
+        lunchEnd: combineDateTime(formData.get('lunchEnd') as string),
+        checkOut: combineDateTime(formData.get('checkOut') as string),
+    };
+
+    try {
+        const updated = await attendanceService.update(editingRecord.id, updateData);
+        setRecords(prev => prev.map(r => r.id === updated.id ? updated : r));
+        setEditingRecord(null);
+    } catch (error) {
+        console.error("Error updating record:", error);
+        alert("Error al actualizar el registro. Verifique la secuencia de horas.");
+    } finally {
+        setIsUpdating(false);
+    }
+  };
 
   const calculateHoursWorked = (record: AttendanceRecord | undefined): string => {
       if (!record || !record.checkIn || !record.checkOut || !record.lunchStart || !record.lunchEnd) {
@@ -173,7 +236,10 @@ export function EmployeeHistory() {
         </div>
 
         <div className="flex items-center gap-2">
-            <button className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
+            <button 
+                onClick={handleExport}
+                className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
                 <Download size={16} />
                 Exportar
             </button>
@@ -236,6 +302,13 @@ export function EmployeeHistory() {
                                     </span>
                                     {record && record.status !== 'weekend' && (
                                         <div className="flex items-center gap-1">
+                                            <button 
+                                                onClick={() => setEditingRecord(record)}
+                                                className="text-gray-400 hover:text-indigo-600 transition-colors p-1"
+                                                title="Editar asistencia"
+                                            >
+                                                <Pencil size={14} />
+                                            </button>
                                             {/* Botón de Mapa */}
                                             {(record.latCheckIn || record.latCheckOut) && (
                                                 <button 
@@ -314,8 +387,11 @@ export function EmployeeHistory() {
                 <p className="text-sm text-indigo-700 mb-4">
                     Descarga el reporte completo de asistencias de este mes en formato PDF o Excel.
                 </p>
-                <button className="w-full py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm">
-                    Descargar Reporte
+                <button 
+                    onClick={handleExport}
+                    className="w-full py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm"
+                >
+                    Descargar Reporte CSV
                 </button>
             </div>
         </div>
@@ -338,7 +414,9 @@ export function EmployeeHistory() {
                     </button>
                 </div>
                 <div className="p-4 bg-gray-50">
-                    <AttendanceMap record={selectedRecord} />
+                    <Suspense fallback={<div className="h-[400px] w-full flex items-center justify-center bg-gray-100 rounded-lg">Cargando mapa...</div>}>
+                        <AttendanceMap record={selectedRecord} />
+                    </Suspense>
                 </div>
                 <div className="p-4 border-t border-gray-100 flex justify-end">
                     <button 
@@ -348,6 +426,44 @@ export function EmployeeHistory() {
                         Cerrar
                     </button>
                 </div>
+            </div>
+        </div>
+      )}
+
+      {/* Modal de Edición */}
+      {editingRecord && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
+                <div className="flex items-center justify-between p-4 border-b border-gray-100">
+                    <h3 className="text-lg font-bold text-gray-900">Editar Asistencia - {editingRecord.date}</h3>
+                    <button onClick={() => setEditingRecord(null)} className="p-2 hover:bg-gray-100 rounded-full text-gray-500"><X size={20} /></button>
+                </div>
+                <form onSubmit={handleUpdateRecord} className="p-6 space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Ingreso</label>
+                            <input type="time" name="checkIn" defaultValue={editingRecord.checkIn} className="w-full border border-gray-300 rounded-lg p-2" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Salida Almuerzo</label>
+                            <input type="time" name="lunchStart" defaultValue={editingRecord.lunchStart} className="w-full border border-gray-300 rounded-lg p-2" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Regreso Almuerzo</label>
+                            <input type="time" name="lunchEnd" defaultValue={editingRecord.lunchEnd} className="w-full border border-gray-300 rounded-lg p-2" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Salida</label>
+                            <input type="time" name="checkOut" defaultValue={editingRecord.checkOut} className="w-full border border-gray-300 rounded-lg p-2" />
+                        </div>
+                    </div>
+                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 mt-4">
+                        <button type="button" onClick={() => setEditingRecord(null)} className="px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg border border-gray-300">Cancelar</button>
+                        <button type="submit" disabled={isUpdating} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-white disabled:opacity-50">
+                            {isUpdating ? 'Guardando...' : 'Guardar Cambios'}
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
       )}

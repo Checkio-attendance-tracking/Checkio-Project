@@ -148,7 +148,7 @@ export function EmployeeList() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center space-x-1 text-sm text-gray-600">
                         {user.role === 'admin' ? <Shield size={16} className="text-indigo-500" /> : <UserIcon size={16} />}
-                        <span className="capitalize">{user.role}</span>
+                        <span className="capitalize">{user.role === 'admin' ? 'RRHH' : user.role}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

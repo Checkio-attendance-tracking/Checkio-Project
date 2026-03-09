@@ -11,7 +11,7 @@ export class CompanyController {
         return;
       }
       
-      const company = await companyRepo.findById(req.user.companyId);
+      const company = await companyRepo.findById(req.user!.companyId as string);
       
       if (!company) {
         res.status(404).json({ message: "Company not found" });
@@ -39,7 +39,7 @@ export class CompanyController {
 
       const { geofenceEnabled, geofenceLat, geofenceLng, geofenceRadius } = req.body;
       
-      const updated = await companyRepo.update(req.user.companyId, {
+      const updated = await companyRepo.update(req.user!.companyId as string, {
         geofenceEnabled: Boolean(geofenceEnabled),
         geofenceLat: geofenceLat !== undefined && geofenceLat !== null ? parseFloat(geofenceLat) : null,
         geofenceLng: geofenceLng !== undefined && geofenceLng !== null ? parseFloat(geofenceLng) : null,

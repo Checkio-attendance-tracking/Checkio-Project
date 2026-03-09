@@ -4,7 +4,7 @@ const SECRET = process.env.JWT_SECRET || "default_secret";
 
 export interface TokenPayload {
   userId: string;
-  companyId: string;
+  companyId: string | null;
   role: string;
   employeeId?: string | null;
 }

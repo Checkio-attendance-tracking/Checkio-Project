@@ -7,7 +7,7 @@ const employeeService = new EmployeeService();
 export class EmployeeController {
   async getAll(req: Request, res: Response) {
     try {
-      const employees = await employeeService.getAll(req.user!.companyId);
+      const employees = await employeeService.getAll(req.user!.companyId as string);
       res.json(employees);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
@@ -18,7 +18,7 @@ export class EmployeeController {
   async create(req: Request, res: Response) {
     try {
       const validatedData = createEmployeeSchema.parse(req.body);
-      const employee = await employeeService.create(req.user!.companyId, validatedData);
+      const employee = await employeeService.create(req.user!.companyId as string, validatedData);
       res.status(201).json(employee);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
@@ -30,7 +30,7 @@ export class EmployeeController {
     try {
       const { id } = req.params;
       const validatedData = updateEmployeeSchema.parse(req.body);
-      const employee = await employeeService.update(req.user!.companyId, id as string, validatedData);
+      const employee = await employeeService.update(req.user!.companyId as string, id as string, validatedData);
       res.json(employee);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
@@ -41,7 +41,7 @@ export class EmployeeController {
   async delete(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      await employeeService.delete(req.user!.companyId, id as string);
+      await employeeService.delete(req.user!.companyId as string, id as string);
       res.status(204).send();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
