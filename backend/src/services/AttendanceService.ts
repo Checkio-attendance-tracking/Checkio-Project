@@ -46,7 +46,7 @@ export class AttendanceService {
       if (!location) {
         throw new Error("Location is required for this company");
       }
-      if (company.geofenceLat && company.geofenceLng) {
+      if (company.geofenceLat !== null && company.geofenceLng !== null) {
         const distance = getDistanceFromLatLonInMeters(
           location.lat, location.lng,
           company.geofenceLat, company.geofenceLng

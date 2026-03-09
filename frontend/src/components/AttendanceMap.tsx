@@ -35,6 +35,14 @@ export function AttendanceMap({ record }: AttendanceMapProps) {
     return <div className="p-4 text-center text-gray-500 bg-gray-50 rounded-lg">No hay datos de ubicación disponibles para este registro.</div>;
   }
 
+  // Create custom marker function
+  const createCustomIcon = (color: string) => L.divIcon({
+    className: 'custom-div-icon',
+    html: `<div style="background-color: ${color}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.4);"></div>`,
+    iconSize: [12, 12],
+    iconAnchor: [6, 6]
+  });
+
   // Calculate center
   const centerLat = points.reduce((sum, p) => sum + (p.lat || 0), 0) / points.length;
   const centerLng = points.reduce((sum, p) => sum + (p.lng || 0), 0) / points.length;
@@ -47,7 +55,11 @@ export function AttendanceMap({ record }: AttendanceMapProps) {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
         {points.map((point, idx) => (
-          <Marker key={idx} position={[point.lat!, point.lng!]}>
+          <Marker 
+            key={idx} 
+            position={[point.lat!, point.lng!]}
+            icon={createCustomIcon(point.color)}
+          >
             <Popup>
               <div className="text-center">
                 <strong className="block text-indigo-600 mb-1">{point.type}</strong>

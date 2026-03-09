@@ -41,8 +41,8 @@ export class CompanyController {
       
       const updated = await companyRepo.update(req.user.companyId, {
         geofenceEnabled: Boolean(geofenceEnabled),
-        geofenceLat: geofenceLat ? parseFloat(geofenceLat) : null,
-        geofenceLng: geofenceLng ? parseFloat(geofenceLng) : null,
+        geofenceLat: geofenceLat !== undefined && geofenceLat !== null ? parseFloat(geofenceLat) : null,
+        geofenceLng: geofenceLng !== undefined && geofenceLng !== null ? parseFloat(geofenceLng) : null,
         geofenceRadius: geofenceRadius ? parseInt(geofenceRadius) : 100
       });
 
