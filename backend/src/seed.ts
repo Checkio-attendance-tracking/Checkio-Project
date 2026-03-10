@@ -2,31 +2,43 @@ import { prisma } from "./config/database";
 import { hashPassword } from "./utils/password";
 
 const seed = async () => {
-  console.log("Starting database seed...");
+  console.log("Starting database reset (beta)...");
 
-  // Clean existing data
-  try {
-    await prisma.attendance.deleteMany({});
-    await prisma.user.deleteMany({});
-    await prisma.employee.deleteMany({});
-    await prisma.company.deleteMany({});
-    console.log("Database cleaned.");
-  } catch (error) {
-    console.warn("Error cleaning database (might be empty):", error);
-  }
+  const superAdminEmail = "superadmin@checkio.pe";
 
-  // Create Superadmin
-  const superAdmin = await prisma.user.create({
-    data: {
-      name: "Super Admin",
-      email: "superadmin@checkio.pe",
-      passwordHash: await hashPassword("superadmin123"),
-      role: "superadmin",
-      companyId: null // Explicitly null
+  await prisma.$transaction(async (tx) => {
+    const existingSuperadmin = await tx.user.findUnique({
+      where: { email: superAdminEmail }
+    });
+
+    if (!existingSuperadmin) {
+      await tx.user.create({
+        data: {
+          name: "Super Admin",
+          email: superAdminEmail,
+          passwordHash: await hashPassword("superadmin123"),
+          role: "superadmin",
+          companyId: null
+        }
+      });
+    } else {
+      await tx.user.update({
+        where: { id: existingSuperadmin.id },
+        data: {
+          role: "superadmin",
+          companyId: null,
+          employeeId: null
+        }
+      });
     }
+
+    await tx.attendance.deleteMany({});
+    await tx.user.deleteMany({ where: { role: { not: "superadmin" } } });
+    await tx.employee.deleteMany({});
+    await tx.company.deleteMany({});
   });
 
-  console.log("Superadmin created:", superAdmin.email);
+  console.log("Database cleaned. Only superadmin remains:", superAdminEmail);
 };
 
 seed()

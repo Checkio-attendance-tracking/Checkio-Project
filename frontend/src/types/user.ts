@@ -1,3 +1,19 @@
+export type WorkDayKey = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
+
+export interface WorkDaySchedule {
+  enabled: boolean;
+  start?: string;
+  end?: string;
+  breakStart?: string;
+  breakEnd?: string;
+}
+
+export interface WorkSchedule {
+  timezone?: string;
+  graceMinutes?: number;
+  days: Record<WorkDayKey, WorkDaySchedule>;
+}
+
 export interface User {
   id: string;
   // Campos de autenticación
@@ -14,6 +30,7 @@ export interface User {
   workplace: string; // Nuevo: Lugar de Trabajo
   joinDate: string; // Fecha de Ingreso
   department: string; // Representa el Puesto de Trabajo (Job Title)
+  workSchedule?: WorkSchedule;
   
   // Sistema
   role: 'admin' | 'employee' | 'superadmin';

@@ -23,8 +23,12 @@ export function CreateCompany() {
     try {
       await superAdminService.createCompany(formData);
       navigate('/superadmin/companies');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al crear la empresa');
+    } catch (err: unknown) {
+      const message =
+        typeof err === 'object' && err && 'response' in err
+          ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+          : undefined;
+      setError(message || 'Error al crear la empresa');
     } finally {
       setLoading(false);
     }

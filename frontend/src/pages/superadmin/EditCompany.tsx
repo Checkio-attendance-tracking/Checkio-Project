@@ -51,8 +51,12 @@ export function EditCompany() {
         status: formData.status as 'active' | 'inactive' | 'suspended'
       });
       navigate('/superadmin/companies');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al actualizar la empresa');
+    } catch (err: unknown) {
+      const message =
+        typeof err === 'object' && err && 'response' in err
+          ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+          : undefined;
+      setError(message || 'Error al actualizar la empresa');
     } finally {
       setSaving(false);
     }

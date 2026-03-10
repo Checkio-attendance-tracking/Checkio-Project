@@ -29,6 +29,7 @@ export class AttendanceRepository {
   async findAllByEmployee(companyId: string, employeeId: string) {
     return prisma.attendance.findMany({
       where: { companyId, employeeId },
+      include: { employee: true },
       orderBy: { date: 'desc' }
     });
   }

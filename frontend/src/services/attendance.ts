@@ -2,6 +2,25 @@ import api from './api';
 import { format } from 'date-fns';
 import type { AttendanceRecord } from '../types/attendance';
 
+const STORAGE_KEY = 'demo-attendance';
+
+const loadDemoAttendance = (): AttendanceRecord[] => {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (raw) {
+    try {
+      return JSON.parse(raw) as AttendanceRecord[];
+    } catch {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+  return [];
+};
+
+const saveDemoAttendance = (records: AttendanceRecord[]) => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+};
+
 const getCurrentPosition = (): Promise<{lat: number, lng: number} | undefined> => {
   return new Promise((resolve) => {
     if (!navigator.geolocation) {
@@ -40,20 +59,57 @@ export const attendanceService = {
       checkOut: '/asistencias/salida-final'
     };
     
-    const location = await getCurrentPosition();
-    const response = await api.post<AttendanceRecord>(endpoints[type], { location });
-    return response.data;
+    try {
+      const location = await getCurrentPosition();
+      const response = await api.post<AttendanceRecord>(endpoints[type], { location });
+      return response.data;
+    } catch {
+      const userRaw = localStorage.getItem('user');
+      if (!userRaw) throw new Error('No autenticado');
+      const user = JSON.parse(userRaw) as { id: string; role: string };
+      if (user.role !== 'employee') throw new Error('Acción no disponible (modo demo)');
+
+      const now = new Date();
+      const date = format(now, 'yyyy-MM-dd');
+      const time = format(now, 'HH:mm');
+      const records = loadDemoAttendance();
+      const existingIdx = records.findIndex((r) => r.employeeId === user.id && r.date === date);
+      const base: AttendanceRecord = existingIdx >= 0 ? records[existingIdx] : { id: `demo-${date}-${user.id}`, employeeId: user.id, date, status: 'present' };
+
+      const updated: AttendanceRecord =
+        type === 'checkIn' ? { ...base, checkIn: base.checkIn || time, status: 'present' } :
+        type === 'lunchStart' ? { ...base, lunchStart: base.lunchStart || time } :
+        type === 'lunchEnd' ? { ...base, lunchEnd: base.lunchEnd || time } :
+        { ...base, checkOut: base.checkOut || time };
+
+      const next = [...records];
+      if (existingIdx >= 0) next[existingIdx] = updated;
+      else next.unshift(updated);
+      saveDemoAttendance(next);
+      return updated;
+    }
   },
 
   async getMyHistory(month?: Date) {
-    const params: Record<string, string> = {};
-    if (month) {
-      params.month = format(month, 'yyyy-MM');
+    try {
+      const params: Record<string, string> = {};
+      if (month) {
+        params.month = format(month, 'yyyy-MM');
+      }
+      
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await api.get<any[]>('/asistencias/mis-asistencias', { params });
+      return response.data.map(mapBackendAttendanceToFrontend);
+    } catch {
+      const userRaw = localStorage.getItem('user');
+      if (!userRaw) throw new Error('No autenticado');
+      const user = JSON.parse(userRaw) as { id: string };
+
+      const records = loadDemoAttendance().filter((r) => r.employeeId === user.id);
+      if (!month) return records;
+      const monthKey = format(month, 'yyyy-MM');
+      return records.filter((r) => r.date.startsWith(monthKey));
     }
-    
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const response = await api.get<any[]>('/asistencias/mis-asistencias', { params });
-    return response.data.map(mapBackendAttendanceToFrontend);
   },
 
   async getAll(monthOrDate?: Date, employeeId?: string, isExactDate: boolean = false) {
@@ -108,24 +164,75 @@ export const attendanceService = {
       params.employeeId = employeeId;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const response = await api.get<any[]>('/asistencias', { params });
-    return response.data.map(mapBackendAttendanceToFrontend);
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const response = await api.get<any[]>('/asistencias', { params });
+      return response.data.map(mapBackendAttendanceToFrontend);
+    } catch {
+      let records = loadDemoAttendance();
+      if (employeeId) records = records.filter((r) => r.employeeId === employeeId);
+      if (monthOrDate) {
+        const key = format(monthOrDate, 'yyyy-MM-dd');
+        records = records.filter((r) => r.date === key);
+      }
+      return records;
+    }
   },
   
   // Admin methods
   async create(data: Partial<AttendanceRecord>) {
-    const response = await api.post('/asistencias', data);
-    return mapBackendAttendanceToFrontend(response.data);
+    try {
+      const response = await api.post('/asistencias', data);
+      return mapBackendAttendanceToFrontend(response.data);
+    } catch {
+      const records = loadDemoAttendance();
+      const id = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `demo-${Date.now()}`;
+      const created: AttendanceRecord = {
+        id,
+        employeeId: data.employeeId || 'demo',
+        date: data.date || format(new Date(), 'yyyy-MM-dd'),
+        checkIn: data.checkIn,
+        lunchStart: data.lunchStart,
+        lunchEnd: data.lunchEnd,
+        checkOut: data.checkOut,
+        latCheckIn: data.latCheckIn,
+        lngCheckIn: data.lngCheckIn,
+        latLunchStart: data.latLunchStart,
+        lngLunchStart: data.lngLunchStart,
+        latLunchEnd: data.latLunchEnd,
+        lngLunchEnd: data.lngLunchEnd,
+        latCheckOut: data.latCheckOut,
+        lngCheckOut: data.lngCheckOut,
+        status: (data.status as AttendanceRecord['status']) || (data.checkIn ? 'present' : 'absent')
+      };
+      saveDemoAttendance([created, ...records]);
+      return created;
+    }
   },
 
   async update(id: string, data: Partial<AttendanceRecord>) {
-    const response = await api.put(`/asistencias/${id}`, data);
-    return mapBackendAttendanceToFrontend(response.data);
+    try {
+      const response = await api.put(`/asistencias/${id}`, data);
+      return mapBackendAttendanceToFrontend(response.data);
+    } catch {
+      const records = loadDemoAttendance();
+      const idx = records.findIndex((r) => r.id === id);
+      if (idx === -1) throw new Error('Registro no encontrado (modo demo)');
+      const updated: AttendanceRecord = { ...records[idx], ...data, id: records[idx].id };
+      const next = [...records];
+      next[idx] = updated;
+      saveDemoAttendance(next);
+      return updated;
+    }
   },
 
   async delete(id: string) {
-    await api.delete(`/asistencias/${id}`);
+    try {
+      await api.delete(`/asistencias/${id}`);
+    } catch {
+      const records = loadDemoAttendance();
+      saveDemoAttendance(records.filter((r) => r.id !== id));
+    }
   }
 };
 
@@ -154,6 +261,6 @@ function mapBackendAttendanceToFrontend(record: any): AttendanceRecord { // esli
     latCheckOut: record.latCheckOut,
     lngCheckOut: record.lngCheckOut,
     
-    status: record.checkIn ? 'present' : 'absent' // Simplistic status
+    status: record.status || (record.checkIn ? 'present' : 'absent')
   };
 }

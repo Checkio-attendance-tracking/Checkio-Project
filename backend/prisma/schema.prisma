@@ -60,6 +60,7 @@ model Employee {
   birthDate    DateTime?
   businessName String?      // Razón Social
   workplace    String?      // Lugar de Trabajo
+  workSchedule Json?
   status       String       @default("active") // active, inactive
   joinDate     DateTime
   user         User?

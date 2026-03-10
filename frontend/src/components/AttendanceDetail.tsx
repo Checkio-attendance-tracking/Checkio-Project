@@ -5,12 +5,14 @@ import { format, startOfWeek, addDays, subWeeks, addWeeks, isSameDay, parseISO }
 import { es } from 'date-fns/locale';
 import type { AttendanceRecord } from '../types/attendance';
 import { attendanceService } from '../services/attendance';
+import type { WorkDayKey, WorkSchedule } from '../types/user';
 
 interface AttendanceDetailProps {
   employeeId: string;
+  workSchedule?: WorkSchedule;
 }
 
-export function AttendanceDetail({ employeeId }: AttendanceDetailProps) {
+export function AttendanceDetail({ employeeId, workSchedule }: AttendanceDetailProps) {
   const navigate = useNavigate();
   const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
@@ -35,6 +37,36 @@ export function AttendanceDetail({ employeeId }: AttendanceDetailProps) {
   const handleNextWeek = () => setCurrentWeekStart(prev => addWeeks(prev, 1));
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(currentWeekStart, i));
+
+  const fallbackDayKey = (date: Date): WorkDayKey => {
+    const map: Record<number, WorkDayKey> = { 0: 'sun', 1: 'mon', 2: 'tue', 3: 'wed', 4: 'thu', 5: 'fri', 6: 'sat' };
+    return map[date.getDay()] ?? 'mon';
+  };
+
+  const getWorkDayKey = (date: Date): WorkDayKey => {
+    const timeZone = workSchedule?.timezone || 'America/Lima';
+    const weekday = new Intl.DateTimeFormat('en-US', { timeZone, weekday: 'short' }).format(date);
+
+    const map: Record<string, WorkDayKey> = {
+      Mon: 'mon',
+      Tue: 'tue',
+      Wed: 'wed',
+      Thu: 'thu',
+      Fri: 'fri',
+      Sat: 'sat',
+      Sun: 'sun'
+    };
+
+    return map[weekday] ?? fallbackDayKey(date);
+  };
+
+  const isOffDay = (date: Date) => {
+    if (!workSchedule) {
+      return date.getDay() === 0 || date.getDay() === 6;
+    }
+    const key = getWorkDayKey(date);
+    return !workSchedule.days[key]?.enabled;
+  };
 
   const getRecordForDate = (date: Date) => {
     // Try exact string match first
@@ -141,12 +173,12 @@ export function AttendanceDetail({ employeeId }: AttendanceDetailProps) {
         {weekDays.map((day) => {
           const record = getRecordForDate(day);
           const isToday = isSameDay(day, new Date());
-          const isWeekend = day.getDay() === 0 || day.getDay() === 6;
-          const status = record?.status || (isWeekend ? 'weekend' : 'absent');
+          const offDay = isOffDay(day);
+          const status = record?.status || (offDay ? 'weekend' : 'absent');
           
           // Only show absent if date is in the past
           const isPast = day < new Date();
-          const displayStatus = (!record && !isPast && !isWeekend) ? 'pending' : status;
+          const displayStatus = (!record && !isPast && !offDay) ? 'pending' : status;
 
           return (
             <div 

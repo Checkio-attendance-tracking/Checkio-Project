@@ -2,6 +2,31 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Save, User, Mail, Lock, Calendar, Building, MapPin, Briefcase } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { employeeService } from '../../services/employee';
+import type { WorkDayKey, WorkSchedule } from '../../types/user';
+
+const getDefaultWorkSchedule = (): WorkSchedule => ({
+  timezone: 'America/Lima',
+  graceMinutes: 5,
+  days: {
+    mon: { enabled: true, start: '09:00', end: '18:00', breakStart: '13:00', breakEnd: '14:00' },
+    tue: { enabled: true, start: '09:00', end: '18:00', breakStart: '13:00', breakEnd: '14:00' },
+    wed: { enabled: true, start: '09:00', end: '18:00', breakStart: '13:00', breakEnd: '14:00' },
+    thu: { enabled: true, start: '09:00', end: '18:00', breakStart: '13:00', breakEnd: '14:00' },
+    fri: { enabled: true, start: '09:00', end: '18:00', breakStart: '13:00', breakEnd: '14:00' },
+    sat: { enabled: false },
+    sun: { enabled: false },
+  },
+});
+
+const dayLabels: Record<WorkDayKey, string> = {
+  mon: 'Lun',
+  tue: 'Mar',
+  wed: 'Mié',
+  thu: 'Jue',
+  fri: 'Vie',
+  sat: 'Sáb',
+  sun: 'Dom',
+};
 
 export function CreateEmployee() {
   const navigate = useNavigate();
@@ -19,6 +44,7 @@ export function CreateEmployee() {
     joinDate: '',
     department: '',
     role: 'employee' as 'employee' | 'admin',
+    workSchedule: getDefaultWorkSchedule(),
   });
 
   useEffect(() => {
@@ -44,6 +70,7 @@ export function CreateEmployee() {
           joinDate: user.joinDate,
           department: user.department,
           role: user.role as 'admin' | 'employee',
+          workSchedule: user.workSchedule || getDefaultWorkSchedule(),
         });
       }
     } catch (error) {
@@ -54,6 +81,36 @@ export function CreateEmployee() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const updateSchedule = (patch: Partial<WorkSchedule>) => {
+    setFormData((prev) => ({
+      ...prev,
+      workSchedule: {
+        ...prev.workSchedule,
+        ...patch,
+        days: {
+          ...prev.workSchedule.days,
+          ...(patch.days || {})
+        }
+      }
+    }));
+  };
+
+  const updateScheduleDay = (day: WorkDayKey, patch: Partial<WorkSchedule['days'][WorkDayKey]>) => {
+    setFormData((prev) => ({
+      ...prev,
+      workSchedule: {
+        ...prev.workSchedule,
+        days: {
+          ...prev.workSchedule.days,
+          [day]: {
+            ...prev.workSchedule.days[day],
+            ...patch
+          }
+        }
+      }
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -262,6 +319,107 @@ export function CreateEmployee() {
                   placeholder="Ej. Gerente de Ventas"
                 />
               </div>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-100"></div>
+
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              Horario y Días de Trabajo
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 block">Zona Horaria</label>
+                <input
+                  type="text"
+                  value={formData.workSchedule.timezone || ''}
+                  onChange={(e) => updateSchedule({ timezone: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                  placeholder="America/Lima"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 block">Tolerancia (min)</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={240}
+                  value={formData.workSchedule.graceMinutes ?? 0}
+                  onChange={(e) => updateSchedule({ graceMinutes: Number(e.target.value) })}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="overflow-x-auto border border-gray-200 rounded-lg">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-gray-600">
+                  <tr>
+                    <th className="text-left px-4 py-3">Día</th>
+                    <th className="text-left px-4 py-3">Trabaja</th>
+                    <th className="text-left px-4 py-3">Inicio</th>
+                    <th className="text-left px-4 py-3">Fin</th>
+                    <th className="text-left px-4 py-3">Almuerzo</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {(Object.keys(dayLabels) as WorkDayKey[]).map((day) => {
+                    const d = formData.workSchedule.days[day];
+                    return (
+                      <tr key={day} className="bg-white">
+                        <td className="px-4 py-3 font-medium text-gray-800">{dayLabels[day]}</td>
+                        <td className="px-4 py-3">
+                          <input
+                            type="checkbox"
+                            checked={d.enabled}
+                            onChange={(e) => updateScheduleDay(day, { enabled: e.target.checked })}
+                          />
+                        </td>
+                        <td className="px-4 py-3">
+                          <input
+                            type="time"
+                            disabled={!d.enabled}
+                            value={d.start || ''}
+                            onChange={(e) => updateScheduleDay(day, { start: e.target.value })}
+                            className="px-2 py-1 border border-gray-200 rounded-md disabled:bg-gray-100"
+                          />
+                        </td>
+                        <td className="px-4 py-3">
+                          <input
+                            type="time"
+                            disabled={!d.enabled}
+                            value={d.end || ''}
+                            onChange={(e) => updateScheduleDay(day, { end: e.target.value })}
+                            className="px-2 py-1 border border-gray-200 rounded-md disabled:bg-gray-100"
+                          />
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="time"
+                              disabled={!d.enabled}
+                              value={d.breakStart || ''}
+                              onChange={(e) => updateScheduleDay(day, { breakStart: e.target.value })}
+                              className="px-2 py-1 border border-gray-200 rounded-md disabled:bg-gray-100"
+                            />
+                            <span className="text-gray-400">-</span>
+                            <input
+                              type="time"
+                              disabled={!d.enabled}
+                              value={d.breakEnd || ''}
+                              onChange={(e) => updateScheduleDay(day, { breakEnd: e.target.value })}
+                              className="px-2 py-1 border border-gray-200 rounded-md disabled:bg-gray-100"
+                            />
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
 

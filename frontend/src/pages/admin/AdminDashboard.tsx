@@ -4,7 +4,6 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { employeeService } from '../../services/employee';
 import { attendanceService } from '../../services/attendance';
-import type { User } from '../../types/user';
 import type { AttendanceRecord } from '../../types/attendance';
 
 export function AdminDashboard() {

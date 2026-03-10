@@ -26,6 +26,92 @@ function deg2rad(deg: number) {
   return deg * (Math.PI/180)
 }
 
+type AttendanceStatus = 'present' | 'absent' | 'late' | 'weekend';
+type WorkDayKey = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
+
+type WorkSchedule = {
+  timezone?: string;
+  graceMinutes?: number;
+  days: Record<WorkDayKey, { enabled: boolean; start?: string; end?: string; breakStart?: string; breakEnd?: string }>;
+};
+
+function hhmmToMinutes(hhmm: string): number {
+  const [h, m] = hhmm.split(':').map((v) => Number(v));
+  return h * 60 + m;
+}
+
+function formatTimeInTimeZone(date: Date, timeZone: string): string {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  }).formatToParts(date);
+
+  const hour = parts.find((p) => p.type === 'hour')?.value ?? '00';
+  const minute = parts.find((p) => p.type === 'minute')?.value ?? '00';
+  return `${hour}:${minute}`;
+}
+
+function fallbackDayKey(date: Date): WorkDayKey {
+  const map: Record<number, WorkDayKey> = { 0: 'sun', 1: 'mon', 2: 'tue', 3: 'wed', 4: 'thu', 5: 'fri', 6: 'sat' };
+  return map[date.getDay()] ?? 'mon';
+}
+
+function getDayKeyInTimeZone(date: Date, timeZone: string): WorkDayKey {
+  const weekday = new Intl.DateTimeFormat('en-US', { timeZone, weekday: 'short' }).format(date);
+  const map: Record<string, WorkDayKey> = {
+    Mon: 'mon',
+    Tue: 'tue',
+    Wed: 'wed',
+    Thu: 'thu',
+    Fri: 'fri',
+    Sat: 'sat',
+    Sun: 'sun'
+  };
+  return map[weekday] ?? fallbackDayKey(date);
+}
+
+function getSchedule(raw: unknown): WorkSchedule | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const schedule = raw as WorkSchedule;
+  if (!schedule.days || typeof schedule.days !== 'object') return undefined;
+  return schedule;
+}
+
+function computeStatus(record: any, scheduleOverride?: unknown): AttendanceStatus {
+  const schedule = getSchedule(scheduleOverride) ?? getSchedule(record.employee?.workSchedule);
+  if (!schedule) {
+    return record.checkIn ? 'present' : 'absent';
+  }
+
+  const timeZone = schedule.timezone || 'America/Lima';
+  const dayKey = getDayKeyInTimeZone(new Date(record.date), timeZone);
+  const day = schedule.days?.[dayKey];
+
+  if (!day || !day.enabled) {
+    return 'weekend';
+  }
+
+  if (!record.checkIn) {
+    return 'absent';
+  }
+
+  if (!day.start) {
+    return 'present';
+  }
+
+  const grace = schedule.graceMinutes ?? 0;
+  const expectedStart = hhmmToMinutes(day.start);
+  const actualStart = hhmmToMinutes(formatTimeInTimeZone(new Date(record.checkIn), timeZone));
+
+  return actualStart > expectedStart + grace ? 'late' : 'present';
+}
+
+function withStatus(record: any, scheduleOverride?: unknown) {
+  return { ...record, status: computeStatus(record, scheduleOverride) };
+}
+
 export class AttendanceService {
   // Employee methods
   async markAttendance(
@@ -67,13 +153,14 @@ export class AttendanceService {
         throw new Error("Must check-in first");
       }
 
-      return attendanceRepo.create(companyId, {
+      const created = await attendanceRepo.create(companyId, {
         employeeId,
         date: startOfDay(today),
         checkIn: today,
         latCheckIn: location?.lat,
         lngCheckIn: location?.lng
       });
+      return withStatus(created, employee.workSchedule);
     }
 
     // Update existing record
@@ -87,11 +174,12 @@ export class AttendanceService {
       if (record.lunchStart) throw new Error("Already started lunch");
       if (record.checkOut) throw new Error("Already checked out");
       
-      return attendanceRepo.update(record.id, { 
+      const updated = await attendanceRepo.update(record.id, { 
         lunchStart: today,
         latLunchStart: location?.lat,
         lngLunchStart: location?.lng
       }, companyId);
+      return withStatus(updated, employee.workSchedule);
     }
 
     if (type === 'lunchEnd') {
@@ -99,11 +187,12 @@ export class AttendanceService {
       if (record.lunchEnd) throw new Error("Already ended lunch");
       if (record.checkOut) throw new Error("Already checked out");
 
-      return attendanceRepo.update(record.id, { 
+      const updated = await attendanceRepo.update(record.id, { 
         lunchEnd: today,
         latLunchEnd: location?.lat,
         lngLunchEnd: location?.lng
       }, companyId);
+      return withStatus(updated, employee.workSchedule);
     }
 
     if (type === 'checkOut') {
@@ -111,28 +200,31 @@ export class AttendanceService {
       if (record.checkOut) throw new Error("Already checked out");
       // Optional: enforce lunch sequence completion?
       
-      return attendanceRepo.update(record.id, { 
+      const updated = await attendanceRepo.update(record.id, { 
         checkOut: today,
         latCheckOut: location?.lat,
         lngCheckOut: location?.lng
       }, companyId);
+      return withStatus(updated, employee.workSchedule);
     }
   }
 
   async getMyHistory(companyId: string, employeeId: string) {
-    return attendanceRepo.findAllByEmployee(companyId, employeeId);
+    const records = await attendanceRepo.findAllByEmployee(companyId, employeeId);
+    return records.map((r) => withStatus(r));
   }
 
   // HR methods
   async getAll(companyId: string, date?: string, employeeId?: string) {
     const queryDate = date ? new Date(date) : undefined;
-    return attendanceRepo.findAllByCompany(companyId, queryDate, employeeId);
+    const records = await attendanceRepo.findAllByCompany(companyId, queryDate, employeeId);
+    return records.map((r) => withStatus(r));
   }
 
   async getById(companyId: string, id: string) {
     const record = await attendanceRepo.findById(companyId, id);
     if (!record) throw new Error("Attendance record not found");
-    return record;
+    return withStatus(record);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -145,12 +237,15 @@ export class AttendanceService {
     const existing = await attendanceRepo.findByDate(companyId, data.employeeId, data.date);
     if (existing) throw new Error("Attendance record already exists for this date");
 
-    return attendanceRepo.create(companyId, data);
+    const created = await attendanceRepo.create(companyId, data);
+    return withStatus(created, employee.workSchedule);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async update(companyId: string, id: string, data: any) {
-    return attendanceRepo.update(id, data, companyId);
+    const updated = await attendanceRepo.update(id, data, companyId);
+    const record = await attendanceRepo.findById(companyId, id);
+    return record ? withStatus(record) : withStatus(updated);
   }
 
   async delete(companyId: string, id: string) {

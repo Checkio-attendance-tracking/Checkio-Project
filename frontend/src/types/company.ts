@@ -17,7 +17,6 @@ export interface CreateCompanyData {
 }
 
 export interface CreateCompanyUser {
-  companyId: string;
   name: string;
   email: string;
   password?: string;

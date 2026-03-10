@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Users, Building2, UserPlus, CheckCircle, XCircle, Edit, PauseCircle, PlayCircle } from 'lucide-react';
+import { Plus, Users, Building2, UserPlus, Edit, PauseCircle, PlayCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { superAdminService } from '../../services/superadmin';
 import type { Company } from '../../types/company';

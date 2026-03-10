@@ -182,7 +182,7 @@ export function EmployeeList() {
                   {expandedEmployeeId === user.id && (
                     <tr>
                       <td colSpan={5} className="p-0 border-b border-gray-100">
-                        <AttendanceDetail employeeId={user.id} />
+                        <AttendanceDetail employeeId={user.id} workSchedule={user.workSchedule} />
                       </td>
                     </tr>
                   )}
