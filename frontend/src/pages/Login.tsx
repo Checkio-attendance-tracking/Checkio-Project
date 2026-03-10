@@ -29,9 +29,13 @@ export function Login({ onLogin }: LoginProps) {
       const user = await authService.login(username, password);
       onLogin(user);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      console.error(err);
-      setError(err.response?.data?.message || 'Error al iniciar sesión. Verifique sus credenciales.');
+    } catch (err: unknown) {
+      const message =
+        typeof err === 'object' && err && 'response' in err
+          ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+          : undefined;
+
+      setError(message || 'Error al iniciar sesión. Verifique sus credenciales.');
     } finally {
       setLoading(false);
     }

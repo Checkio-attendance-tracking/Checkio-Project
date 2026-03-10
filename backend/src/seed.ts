@@ -11,12 +11,14 @@ const seed = async () => {
       where: { email: superAdminEmail }
     });
 
+    const passwordHash = await hashPassword("superadmin123");
+
     if (!existingSuperadmin) {
       await tx.user.create({
         data: {
           name: "Super Admin",
           email: superAdminEmail,
-          passwordHash: await hashPassword("superadmin123"),
+          passwordHash,
           role: "superadmin",
           companyId: null
         }
@@ -27,7 +29,8 @@ const seed = async () => {
         data: {
           role: "superadmin",
           companyId: null,
-          employeeId: null
+          employeeId: null,
+          passwordHash
         }
       });
     }
