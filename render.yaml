@@ -22,7 +22,6 @@ services:
   - type: web
     name: checkio-frontend
     runtime: static
-    region: oregon
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist
@@ -32,10 +31,7 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_URL
-        fromService:
-          type: web
-          name: checkio-backend
-          property: url
+        value: https://checkio-backend.onrender.com
 
 databases:
   - name: checkio-db
