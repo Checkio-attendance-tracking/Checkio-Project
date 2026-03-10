@@ -1,6 +1,5 @@
 import api from './api';
 import type { User } from '../types/user';
-import { MOCK_USERS } from '../types/user';
 
 interface LoginResponse {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -10,61 +9,23 @@ interface LoginResponse {
 
 export const authService = {
   async login(email: string, password: string): Promise<User> {
-    try {
-      const response = await api.post<LoginResponse>('/auth/login', { email, password });
-      const { user, token } = response.data;
-      
-      localStorage.setItem('token', token);
-      
-      const mappedUser = mapBackendUserToFrontend(user);
-      localStorage.setItem('user', JSON.stringify(mappedUser));
-      
-      return mappedUser;
-    } catch {
-      if (!password) {
-        throw new Error('Contraseña requerida');
-      }
+    const response = await api.post<LoginResponse>('/auth/login', { email, password });
+    const { user, token } = response.data;
 
-      const demoSuperadmin: User = {
-        id: 'demo-superadmin',
-        email: 'superadmin@checkio.pe',
-        firstName: 'Super',
-        lastName: 'Admin',
-        role: 'superadmin',
-        department: 'Superadmin',
-        status: 'active',
-        joinDate: new Date().toISOString(),
-        birthDate: new Date().toISOString(),
-        businessName: 'Checkio',
-        workplace: 'Remoto'
-      };
+    localStorage.setItem('token', token);
 
-      const demoUsers: User[] = [demoSuperadmin, ...MOCK_USERS];
-      const found = demoUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
-      if (!found) {
-        throw new Error('Usuario no encontrado (modo demo)');
-      }
+    const mappedUser = mapBackendUserToFrontend(user);
+    localStorage.setItem('user', JSON.stringify(mappedUser));
 
-      localStorage.setItem('token', 'demo-token');
-      localStorage.setItem('user', JSON.stringify(found));
-      return found;
-    }
+    return mappedUser;
   },
 
   async me(): Promise<User> {
-    try {
-      const response = await api.get('/auth/me');
-      const user = response.data;
-      const mappedUser = mapBackendUserToFrontend(user);
-      localStorage.setItem('user', JSON.stringify(mappedUser));
-      return mappedUser;
-    } catch {
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        return JSON.parse(storedUser) as User;
-      }
-      throw new Error('No autenticado');
-    }
+    const response = await api.get('/auth/me');
+    const user = response.data;
+    const mappedUser = mapBackendUserToFrontend(user);
+    localStorage.setItem('user', JSON.stringify(mappedUser));
+    return mappedUser;
   },
 
   logout() {
