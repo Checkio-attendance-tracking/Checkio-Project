@@ -7,8 +7,7 @@ services:
     plan: free
     rootDir: backend
     buildCommand: npm ci --include=dev --production=false && npx prisma generate && npm run build
-    preDeployCommand: npx prisma db push && if [ "$RUN_SEED" = "true" ]; then npm run seed; fi
-    startCommand: npm start
+    startCommand: sh -c 'npx prisma db push && if [ "$RUN_SEED" = "true" ]; then npm run seed; fi && npm start'
     envVars:
       - key: DATABASE_URL
         fromDatabase:
