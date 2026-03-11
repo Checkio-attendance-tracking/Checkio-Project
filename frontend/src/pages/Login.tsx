@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Logo } from '../components/Logo';
-import { User as UserIcon, Lock } from 'lucide-react';
+import { User as UserIcon, Lock, Eye, EyeOff } from 'lucide-react';
 import { authService } from '../services/auth';
 
 import type { User } from '../types/user';
@@ -12,6 +12,7 @@ interface LoginProps {
 export function Login({ onLogin }: LoginProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -28,7 +29,6 @@ export function Login({ onLogin }: LoginProps) {
     try {
       const user = await authService.login(username, password);
       onLogin(user);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: unknown) {
       const message =
         typeof err === 'object' && err && 'response' in err
@@ -80,12 +80,20 @@ export function Login({ onLogin }: LoginProps) {
                 <Lock className="h-5 w-5 text-gray-400" />
               </div>
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                 placeholder="Ingrese su contraseña"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
             </div>
           </div>
 

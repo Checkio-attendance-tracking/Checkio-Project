@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, Save, X } from 'lucide-react';
+import { Building2, Save, X, Eye, EyeOff } from 'lucide-react';
 import { superAdminService } from '../../services/superadmin';
 
 export function CreateCompany() {
@@ -14,6 +14,7 @@ export function CreateCompany() {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showAdminPassword, setShowAdminPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,13 +126,23 @@ export function CreateCompany() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Contraseña Inicial
                   </label>
-                  <input
-                    type="password"
-                    required
-                    value={formData.adminPassword}
-                    onChange={(e) => setFormData({ ...formData, adminPassword: e.target.value })}
-                    className="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showAdminPassword ? 'text' : 'password'}
+                      required
+                      value={formData.adminPassword}
+                      onChange={(e) => setFormData({ ...formData, adminPassword: e.target.value })}
+                      className="block w-full rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowAdminPassword((v) => !v)}
+                      aria-label={showAdminPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                    >
+                      {showAdminPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

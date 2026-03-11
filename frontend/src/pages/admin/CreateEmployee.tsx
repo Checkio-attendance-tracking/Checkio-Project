@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Save, User, Mail, Lock, Calendar, Building, MapPin, Briefcase } from 'lucide-react';
+import { ArrowLeft, Save, User, Mail, Lock, Calendar, Building, MapPin, Briefcase, Eye, EyeOff } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { employeeService } from '../../services/employee';
 import type { WorkDayKey, WorkSchedule } from '../../types/user';
@@ -46,6 +46,8 @@ export function CreateEmployee() {
     role: 'employee' as 'employee' | 'admin',
     workSchedule: getDefaultWorkSchedule(),
   });
+
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (isEditing && id) {
@@ -187,14 +189,22 @@ export function CreateEmployee() {
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     name="password"
                     required={!isEditing}
                     value={formData.password}
                     onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                    className="w-full pl-10 pr-10 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
                     placeholder="••••••••"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
                 </div>
               </div>
             </div>
