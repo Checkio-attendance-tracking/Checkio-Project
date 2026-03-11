@@ -6,8 +6,6 @@ const workDaySchema = z.object({
   enabled: z.boolean(),
   start: timeHHMM.optional(),
   end: timeHHMM.optional(),
-  breakStart: timeHHMM.optional(),
-  breakEnd: timeHHMM.optional(),
 });
 
 export const workScheduleSchema = z.object({

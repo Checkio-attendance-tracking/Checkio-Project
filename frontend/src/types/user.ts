@@ -4,8 +4,6 @@ export interface WorkDaySchedule {
   enabled: boolean;
   start?: string;
   end?: string;
-  breakStart?: string;
-  breakEnd?: string;
 }
 
 export interface WorkSchedule {

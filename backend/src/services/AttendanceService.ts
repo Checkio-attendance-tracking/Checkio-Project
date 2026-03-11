@@ -32,7 +32,7 @@ type WorkDayKey = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
 type WorkSchedule = {
   timezone?: string;
   graceMinutes?: number;
-  days: Record<WorkDayKey, { enabled: boolean; start?: string; end?: string; breakStart?: string; breakEnd?: string }>;
+  days: Record<WorkDayKey, { enabled: boolean; start?: string; end?: string }>;
 };
 
 function hhmmToMinutes(hhmm: string): number {

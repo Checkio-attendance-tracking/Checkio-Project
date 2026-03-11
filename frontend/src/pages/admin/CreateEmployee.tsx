@@ -8,11 +8,11 @@ const getDefaultWorkSchedule = (): WorkSchedule => ({
   timezone: 'America/Lima',
   graceMinutes: 5,
   days: {
-    mon: { enabled: true, start: '09:00', end: '18:00', breakStart: '13:00', breakEnd: '14:00' },
-    tue: { enabled: true, start: '09:00', end: '18:00', breakStart: '13:00', breakEnd: '14:00' },
-    wed: { enabled: true, start: '09:00', end: '18:00', breakStart: '13:00', breakEnd: '14:00' },
-    thu: { enabled: true, start: '09:00', end: '18:00', breakStart: '13:00', breakEnd: '14:00' },
-    fri: { enabled: true, start: '09:00', end: '18:00', breakStart: '13:00', breakEnd: '14:00' },
+    mon: { enabled: true, start: '09:00', end: '18:00' },
+    tue: { enabled: true, start: '09:00', end: '18:00' },
+    wed: { enabled: true, start: '09:00', end: '18:00' },
+    thu: { enabled: true, start: '09:00', end: '18:00' },
+    fri: { enabled: true, start: '09:00', end: '18:00' },
     sat: { enabled: false },
     sun: { enabled: false },
   },
@@ -372,7 +372,6 @@ export function CreateEmployee() {
                     <th className="text-left px-4 py-3">Trabaja</th>
                     <th className="text-left px-4 py-3">Inicio</th>
                     <th className="text-left px-4 py-3">Fin</th>
-                    <th className="text-left px-4 py-3">Almuerzo</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -405,25 +404,6 @@ export function CreateEmployee() {
                             onChange={(e) => updateScheduleDay(day, { end: e.target.value })}
                             className="px-2 py-1 border border-gray-200 rounded-md disabled:bg-gray-100"
                           />
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="time"
-                              disabled={!d.enabled}
-                              value={d.breakStart || ''}
-                              onChange={(e) => updateScheduleDay(day, { breakStart: e.target.value })}
-                              className="px-2 py-1 border border-gray-200 rounded-md disabled:bg-gray-100"
-                            />
-                            <span className="text-gray-400">-</span>
-                            <input
-                              type="time"
-                              disabled={!d.enabled}
-                              value={d.breakEnd || ''}
-                              onChange={(e) => updateScheduleDay(day, { breakEnd: e.target.value })}
-                              className="px-2 py-1 border border-gray-200 rounded-md disabled:bg-gray-100"
-                            />
-                          </div>
                         </td>
                       </tr>
                     );
