@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, ArrowLeft, Calendar, Download, MapPin, X, Pencil } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowLeft, Calendar, Download, MapPin, X, Pencil, Trash2 } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, getDay, parseISO, isSameDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { employeeService } from '../../services/employee';
@@ -21,6 +21,7 @@ export function EmployeeHistory() {
   const [selectedRecord, setSelectedRecord] = useState<AttendanceRecord | null>(null);
   const [editingRecord, setEditingRecord] = useState<AttendanceRecord | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const loadData = async () => {
     setLoading(true);
@@ -136,6 +137,25 @@ export function EmployeeHistory() {
         alert("Error al actualizar el registro. Verifique la secuencia de horas.");
     } finally {
         setIsUpdating(false);
+    }
+  };
+
+  const handleDeleteRecord = async () => {
+    if (!editingRecord) return;
+
+    const ok = window.confirm(`¿Eliminar la asistencia del ${editingRecord.date}? Esta acción no se puede deshacer.`);
+    if (!ok) return;
+
+    setIsDeleting(true);
+    try {
+      await attendanceService.delete(editingRecord.id);
+      setRecords((prev) => prev.filter((r) => r.id !== editingRecord.id));
+      setEditingRecord(null);
+    } catch (error) {
+      console.error('Error deleting record:', error);
+      alert('Error al eliminar el registro.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -548,8 +568,17 @@ export function EmployeeHistory() {
                         </div>
                     </div>
                     <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 mt-4">
-                        <button type="button" onClick={() => setEditingRecord(null)} className="px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg border border-gray-300">Cancelar</button>
-                        <button type="submit" disabled={isUpdating} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-white disabled:opacity-50">
+                        <button
+                          type="button"
+                          onClick={handleDeleteRecord}
+                          disabled={isUpdating || isDeleting}
+                          className="mr-auto inline-flex items-center gap-2 px-4 py-2 text-red-700 hover:bg-red-50 rounded-lg border border-red-200 disabled:opacity-50"
+                        >
+                          <Trash2 size={16} />
+                          {isDeleting ? 'Eliminando...' : 'Eliminar'}
+                        </button>
+                        <button type="button" onClick={() => setEditingRecord(null)} disabled={isUpdating || isDeleting} className="px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg border border-gray-300 disabled:opacity-50">Cancelar</button>
+                        <button type="submit" disabled={isUpdating || isDeleting} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-white disabled:opacity-50">
                             {isUpdating ? 'Guardando...' : 'Guardar Cambios'}
                         </button>
                     </div>
