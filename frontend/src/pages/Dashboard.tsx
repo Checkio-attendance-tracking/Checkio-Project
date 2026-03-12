@@ -3,7 +3,7 @@ import { usePeruTime } from '../hooks/usePeruTime';
 import { Clock } from '../components/Clock';
 import { ActionButton } from '../components/ActionButton';
 import { Logo } from '../components/Logo';
-import { LogOut, LogIn, Utensils, Briefcase, User as UserIcon, Settings } from 'lucide-react';
+import { LogOut, LogIn, Utensils, Briefcase, User as UserIcon, Settings, MapPin, X, RefreshCw, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { attendanceService } from '../services/attendance';
@@ -20,6 +20,11 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
   const [lastAction, setLastAction] = useState<{ type: string; time: Date } | null>(null);
   const [isMarking, setIsMarking] = useState(false);
   const [todayRecord, setTodayRecord] = useState<AttendanceRecord | null>(null);
+  type LocationHelpKind = 'denied' | 'timeout' | 'unavailable' | 'unsupported' | 'inAppBrowser' | 'required' | 'outside';
+  const [locationHelpOpen, setLocationHelpOpen] = useState(false);
+  const [locationHelpKind, setLocationHelpKind] = useState<LocationHelpKind>('denied');
+  const [locationHelpDetails, setLocationHelpDetails] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<{ label: string; type: 'checkIn' | 'lunchStart' | 'lunchEnd' | 'checkOut' } | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,9 +32,9 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
       try {
         const history = await attendanceService.getMyHistory();
         const todayStr = format(new Date(), 'yyyy-MM-dd');
-        const rec = history.find(r => r.date === todayStr) || null;
+        const rec = history.find((r) => r.date === todayStr) || null;
         setTodayRecord(rec);
-      } catch (e) {
+      } catch {
         // silent
       }
     };
@@ -49,6 +54,52 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
     return msg || 'Error al marcar asistencia';
   };
 
+  const getDeviceContext = () => {
+    const ua = navigator.userAgent || '';
+    const isAndroid = /Android/i.test(ua);
+    const isInAppBrowser = isAndroid && /(wv|FBAN|FBAV|Instagram|Line|MicroMessenger|WhatsApp)/i.test(ua);
+    return { isAndroid, isInAppBrowser };
+  };
+
+  const openLocationHelp = (kind: LocationHelpKind, details?: string) => {
+    setLocationHelpKind(kind);
+    setLocationHelpDetails(details || null);
+    setLocationHelpOpen(true);
+  };
+
+  const requestHighAccuracyLocation = (): Promise<{ lat: number; lng: number }> => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject({ kind: 'unsupported' as const });
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        },
+        (err) => {
+          if (err.code === 1) reject({ kind: 'denied' as const, message: err.message });
+          else if (err.code === 2) reject({ kind: 'unavailable' as const, message: err.message });
+          else reject({ kind: 'timeout' as const, message: err.message });
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+      );
+    });
+  };
+
+  const extractApiMessage = (error: unknown): string | undefined => {
+    if (typeof error !== 'object' || !error) return undefined;
+    if (!('response' in error)) return undefined;
+    const response = (error as { response?: unknown }).response;
+    if (typeof response !== 'object' || !response) return undefined;
+    if (!('data' in response)) return undefined;
+    const data = (response as { data?: unknown }).data;
+    if (typeof data !== 'object' || !data) return undefined;
+    if (!('message' in data)) return undefined;
+    const message = (data as { message?: unknown }).message;
+    return typeof message === 'string' ? message : undefined;
+  };
+
   const handleAction = async (actionLabel: string) => {
     if (isMarking) return;
     setIsMarking(true);
@@ -64,7 +115,30 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
     }
 
     try {
-      await attendanceService.mark(type);
+      setPendingAction({ label: actionLabel, type });
+
+      const { isInAppBrowser } = getDeviceContext();
+      if (isInAppBrowser) {
+        openLocationHelp('inAppBrowser');
+        setIsMarking(false);
+        return;
+      }
+
+      let location: { lat: number; lng: number };
+      try {
+        location = await requestHighAccuracyLocation();
+      } catch (e: unknown) {
+        const kind: LocationHelpKind =
+          typeof e === 'object' && e && 'kind' in e
+            ? (e as { kind: LocationHelpKind }).kind
+            : 'timeout';
+        const message = typeof e === 'object' && e && 'message' in e ? String((e as { message?: string }).message || '') : undefined;
+        openLocationHelp(kind, message);
+        setIsMarking(false);
+        return;
+      }
+
+      await attendanceService.mark(type, location);
       const now = time || new Date();
       setLastAction({ type: actionLabel, time: now });
       // Refresh state for buttons
@@ -72,15 +146,52 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
       const todayStr = format(new Date(), 'yyyy-MM-dd');
       const rec = history.find(r => r.date === todayStr) || null;
       setTodayRecord(rec);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
-      const backendMsg = error.response?.data?.message;
-      alert(translateError(backendMsg));
+      const message = extractApiMessage(error);
+      if (message?.includes('outside the allowed area')) {
+        openLocationHelp('outside', message);
+      } else if (message?.includes('Location is required')) {
+        openLocationHelp('required', message);
+      } else {
+        alert(translateError(message || ''));
+      }
     } finally {
       setIsMarking(false);
     }
   };
+
+  const { isAndroid } = getDeviceContext();
+  const helpTitle =
+    locationHelpKind === 'inAppBrowser' ? 'Abre la app en Chrome' :
+    locationHelpKind === 'denied' ? 'Permite el acceso a tu ubicación' :
+    locationHelpKind === 'timeout' ? 'No se pudo obtener tu ubicación a tiempo' :
+    locationHelpKind === 'unavailable' ? 'No se pudo determinar tu ubicación' :
+    locationHelpKind === 'unsupported' ? 'Tu dispositivo no soporta geolocalización' :
+    locationHelpKind === 'outside' ? 'Estás fuera del área permitida' :
+    'Se requiere ubicación para marcar';
+
+  const helpPrimaryText =
+    locationHelpKind === 'outside' ? 'Acércate al punto permitido y vuelve a intentar.' :
+    locationHelpKind === 'inAppBrowser' ? 'Algunos navegadores internos no muestran el permiso de ubicación.' :
+    'Sigue estos pasos para habilitar la ubicación y registrar tu marcación con mapa.';
+
+  const androidSteps = [
+    'Si abriste desde WhatsApp/Instagram/Facebook: menú (⋮) → “Abrir en Chrome”.',
+    'En Chrome: toca el candado → “Permisos del sitio” → “Ubicación” → “Permitir”.',
+    'En Android: Ajustes → Ubicación → Activar y elegir “Ubicación precisa” si aparece.',
+    'Si sigue sin salir: Ajustes → Apps → Chrome → Permisos → Ubicación → “Permitir mientras se usa”.',
+    'Desactiva ahorro de batería temporalmente y reintenta.'
+  ];
+
+  const genericSteps = [
+    'Permite la ubicación del navegador cuando lo solicite.',
+    'Verifica que la página esté en https:// (candado en la barra).',
+    'Reintenta la marcación.'
+  ];
+
+  const helpSteps =
+    isAndroid ? androidSteps : genericSteps;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -204,6 +315,65 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
       <footer className="py-6 text-center text-gray-400 text-sm">
         &copy; {new Date().getFullYear()} Checkio. Sistema de Control de Asistencia.
       </footer>
+
+      {locationHelpOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between p-4 border-b border-gray-100">
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600">
+                  {locationHelpKind === 'outside' ? <MapPin size={20} /> : <AlertTriangle size={20} />}
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">{helpTitle}</h3>
+                  <p className="text-sm text-gray-500">{helpPrimaryText}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setLocationHelpOpen(false)}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500 hover:text-gray-700"
+                aria-label="Cerrar"
+              >
+                <X size={22} />
+              </button>
+            </div>
+
+            <div className="p-4 bg-gray-50 space-y-3">
+              {locationHelpDetails && (
+                <div className="text-xs text-gray-600 bg-white border border-gray-200 rounded-lg p-3">
+                  {locationHelpDetails}
+                </div>
+              )}
+              <ol className="list-decimal pl-5 space-y-2 text-sm text-gray-700">
+                {helpSteps.map((s) => (
+                  <li key={s}>{s}</li>
+                ))}
+              </ol>
+            </div>
+
+            <div className="p-4 border-t border-gray-100 flex justify-end gap-3">
+              <button
+                onClick={() => setLocationHelpOpen(false)}
+                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+                type="button"
+              >
+                Cerrar
+              </button>
+              <button
+                onClick={() => {
+                  setLocationHelpOpen(false);
+                  if (pendingAction) handleAction(pendingAction.label);
+                }}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium flex items-center gap-2"
+                type="button"
+              >
+                <RefreshCw size={18} />
+                Reintentar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
