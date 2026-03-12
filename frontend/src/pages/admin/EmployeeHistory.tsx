@@ -249,7 +249,7 @@ export function EmployeeHistory() {
       {/* Controles de Mes y Resumen */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="lg:col-span-3 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+            <div className="p-4 border-b border-gray-100 flex items-center justify-between gap-3">
                 <h2 className="font-semibold text-gray-800 flex items-center gap-2">
                     <Calendar size={20} className="text-indigo-600" />
                     Calendario Mensual
@@ -258,7 +258,7 @@ export function EmployeeHistory() {
                     <button onClick={handlePrevMonth} className="p-1 hover:bg-white rounded shadow-sm transition-all text-gray-600">
                         <ChevronLeft size={20} />
                     </button>
-                    <span className="px-4 text-sm font-medium text-gray-800 min-w-[140px] text-center capitalize">
+                    <span className="px-2 sm:px-4 text-xs sm:text-sm font-medium text-gray-800 min-w-[96px] sm:min-w-[140px] text-center capitalize">
                         {format(currentMonth, 'MMMM yyyy', { locale: es })}
                     </span>
                     <button onClick={handleNextMonth} className="p-1 hover:bg-white rounded shadow-sm transition-all text-gray-600">
@@ -268,18 +268,20 @@ export function EmployeeHistory() {
             </div>
 
             {/* Grid del Calendario */}
-            <div className="p-6">
-                <div className="grid grid-cols-7 gap-px mb-2">
+            <div className="p-4 sm:p-6">
+                <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+                  <div className="min-w-[720px] sm:min-w-0">
+                    <div className="grid grid-cols-7 gap-px mb-2">
                     {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map(d => (
-                        <div key={d} className="text-center text-sm font-medium text-gray-500 py-2">
+                        <div key={d} className="text-center text-xs sm:text-sm font-medium text-gray-500 py-1 sm:py-2">
                             {d}
                         </div>
                     ))}
-                </div>
-                <div className="grid grid-cols-7 gap-2">
+                    </div>
+                    <div className="grid grid-cols-7 gap-2">
                     {/* Espacios vacíos */}
                     {Array.from({ length: emptyDays }).map((_, i) => (
-                        <div key={`empty-${i}`} className="h-32 bg-gray-50/50 rounded-lg border border-transparent" />
+                        <div key={`empty-${i}`} className="h-24 sm:h-32 bg-gray-50/50 rounded-lg border border-transparent" />
                     ))}
                     
                     {/* Días */}
@@ -290,12 +292,12 @@ export function EmployeeHistory() {
                         return (
                             <div 
                                 key={day.toISOString()}
-                                className={`h-32 p-2 rounded-lg border flex flex-col justify-between transition-all hover:shadow-md ${
+                                className={`h-24 sm:h-32 p-1.5 sm:p-2 rounded-lg border flex flex-col justify-between transition-all hover:shadow-md ${
                                     isToday ? 'border-indigo-500 ring-1 ring-indigo-500 bg-white' : 'border-gray-100 bg-white'
                                 }`}
                             >
                                 <div className="flex justify-between items-start">
-                                    <span className={`text-sm font-medium w-6 h-6 flex items-center justify-center rounded-full ${
+                                    <span className={`text-xs sm:text-sm font-medium w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full ${
                                         isToday ? 'bg-indigo-600 text-white' : 'text-gray-700'
                                     }`}>
                                         {format(day, 'd')}
@@ -304,7 +306,7 @@ export function EmployeeHistory() {
                                         <div className="flex items-center gap-1">
                                             <button 
                                                 onClick={() => setEditingRecord(record)}
-                                                className="text-gray-400 hover:text-indigo-600 transition-colors p-1"
+                                                className="hidden sm:inline-flex text-gray-400 hover:text-indigo-600 transition-colors p-1"
                                                 title="Editar asistencia"
                                             >
                                                 <Pencil size={14} />
@@ -313,13 +315,13 @@ export function EmployeeHistory() {
                                             {(record.latCheckIn || record.latCheckOut) && (
                                                 <button 
                                                     onClick={() => setSelectedRecord(record)}
-                                                    className="text-gray-400 hover:text-indigo-600 transition-colors"
+                                                    className="hidden sm:inline-flex text-gray-400 hover:text-indigo-600 transition-colors"
                                                     title="Ver ubicación"
                                                 >
                                                     <MapPin size={14} />
                                                 </button>
                                             )}
-                                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium capitalize ${getStatusColor(record.status)}`}>
+                                            <span className={`hidden sm:inline-flex text-[10px] px-1.5 py-0.5 rounded font-medium capitalize ${getStatusColor(record.status)}`}>
                                                 {record.status === 'present' ? 'Asistió' : 
                                                  record.status === 'late' ? 'Tardanza' :
                                                  record.status === 'absent' ? 'Falta' : record.status}
@@ -330,25 +332,27 @@ export function EmployeeHistory() {
 
                                 {record && record.status !== 'weekend' && record.status !== 'absent' ? (
                                     <div className="space-y-1 mt-1">
-                                        <div className="text-xs text-gray-500 flex justify-between">
+                                        <div className="text-[10px] sm:text-xs text-gray-500 flex justify-between">
                                             <span>In:</span> <span className="font-medium text-gray-700">{record.checkIn}</span>
                                         </div>
-                                        <div className="text-xs text-gray-500 flex justify-between">
+                                        <div className="text-[10px] sm:text-xs text-gray-500 flex justify-between">
                                             <span>Out:</span> <span className="font-medium text-gray-700">{record.checkOut}</span>
                                         </div>
                                         <div className="mt-1 pt-1 border-t border-gray-50 flex justify-between items-center">
                                             <span className="text-[10px] text-gray-400">Total</span>
-                                            <span className="text-xs font-bold text-indigo-600">{calculateHoursWorked(record)}</span>
+                                            <span className="text-[11px] sm:text-xs font-bold text-indigo-600">{calculateHoursWorked(record)}</span>
                                         </div>
                                     </div>
                                 ) : record?.status === 'weekend' ? (
                                     <div className="flex-1 flex items-center justify-center">
-                                        <span className="text-xs text-gray-300 italic">Fin de semana</span>
+                                        <span className="text-[10px] sm:text-xs text-gray-300 italic">Fin de semana</span>
                                     </div>
                                 ) : null}
                             </div>
                         );
                     })}
+                    </div>
+                  </div>
                 </div>
             </div>
         </div>
