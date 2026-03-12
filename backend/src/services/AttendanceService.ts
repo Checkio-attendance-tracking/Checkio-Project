@@ -161,7 +161,14 @@ export class AttendanceService {
     // Find today's record (company timezone)
     const timeZone = (employee.workSchedule && (employee.workSchedule as any).timezone) || 'America/Lima';
     const { start, end } = getDayRangeInTimeZone(today, timeZone);
-    const record = await attendanceRepo.findByDateRange(companyId, employeeId, start, end);
+    const openRecord = await attendanceRepo.findLatestOpenByEmployee(companyId, employeeId);
+    if (type === 'checkIn' && openRecord) {
+      throw new Error("Must check-out first");
+    }
+    const record =
+      type === 'checkIn'
+        ? await attendanceRepo.findByDateRange(companyId, employeeId, start, end)
+        : openRecord ?? (await attendanceRepo.findByDateRange(companyId, employeeId, start, end));
 
     if (!record) {
       // Create new record only if type is checkIn

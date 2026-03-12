@@ -29,6 +29,18 @@ export class AttendanceRepository {
     });
   }
 
+  async findLatestOpenByEmployee(companyId: string, employeeId: string) {
+    return prisma.attendance.findFirst({
+      where: {
+        companyId,
+        employeeId,
+        checkIn: { not: null },
+        checkOut: null
+      },
+      orderBy: { date: 'desc' }
+    });
+  }
+
   async findById(companyId: string, id: string) {
     return prisma.attendance.findFirst({
       where: { id, companyId },

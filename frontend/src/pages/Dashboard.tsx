@@ -27,13 +27,18 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
   const [pendingAction, setPendingAction] = useState<{ label: string; type: 'checkIn' | 'lunchStart' | 'lunchEnd' | 'checkOut' } | null>(null);
   const navigate = useNavigate();
 
+  const pickCurrentRecord = (history: AttendanceRecord[]) => {
+    const open = history.find((r) => Boolean(r.checkIn) && !r.checkOut);
+    if (open) return open;
+    const todayStr = format(new Date(), 'yyyy-MM-dd');
+    return history.find((r) => r.date === todayStr) || null;
+  };
+
   useEffect(() => {
     const loadToday = async () => {
       try {
         const history = await attendanceService.getMyHistory();
-        const todayStr = format(new Date(), 'yyyy-MM-dd');
-        const rec = history.find((r) => r.date === todayStr) || null;
-        setTodayRecord(rec);
+        setTodayRecord(pickCurrentRecord(history));
       } catch {
         // silent
       }
@@ -44,6 +49,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
   const translateError = (msg: string) => {
     const m = msg?.toLowerCase() || '';
     if (m.includes('must check-in first')) return 'Debe marcar Ingreso primero';
+    if (m.includes('must check-out first')) return 'Tiene una asistencia abierta. Marque Salida para cerrar.';
     if (m.includes('already checked in')) return 'Ya marcó Ingreso hoy';
     if (m.includes('already started lunch')) return 'Ya marcó Salida al Almuerzo';
     if (m.includes('must start lunch first')) return 'Debe marcar Salida al Almuerzo primero';
@@ -143,9 +149,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
       setLastAction({ type: actionLabel, time: now });
       // Refresh state for buttons
       const history = await attendanceService.getMyHistory();
-      const todayStr = format(new Date(), 'yyyy-MM-dd');
-      const rec = history.find(r => r.date === todayStr) || null;
-      setTodayRecord(rec);
+      setTodayRecord(pickCurrentRecord(history));
     } catch (error: unknown) {
       console.error(error);
       const message = extractApiMessage(error);
