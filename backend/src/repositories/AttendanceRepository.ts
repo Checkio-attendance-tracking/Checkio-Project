@@ -19,6 +19,16 @@ export class AttendanceRepository {
     });
   }
 
+  async findByDateRange(companyId: string, employeeId: string, start: Date, end: Date) {
+    return prisma.attendance.findFirst({
+      where: {
+        companyId,
+        employeeId,
+        date: { gte: start, lte: end }
+      }
+    });
+  }
+
   async findById(companyId: string, id: string) {
     return prisma.attendance.findFirst({
       where: { id, companyId },

@@ -1,7 +1,6 @@
 import { AttendanceRepository } from "../repositories/AttendanceRepository";
 import { EmployeeRepository } from "../repositories/EmployeeRepository";
 import { CompanyRepository } from "../repositories/CompanyRepository";
-import { startOfDay } from "date-fns";
 
 const attendanceRepo = new AttendanceRepository();
 const employeeRepo = new EmployeeRepository();
@@ -112,6 +111,21 @@ function withStatus(record: any, scheduleOverride?: unknown) {
   return { ...record, status: computeStatus(record, scheduleOverride) };
 }
 
+function getDayRangeInTimeZone(now: Date, timeZone: string) {
+  const dtf = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+  });
+  const parts = dtf.formatToParts(now);
+  const map: Record<string, string> = {};
+  for (const p of parts) { if (p.type !== 'literal') map[p.type] = p.value; }
+  const y = Number(map.year); const m = Number(map.month); const d = Number(map.day);
+  const start = new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0));
+  const end = new Date(Date.UTC(y, m - 1, d, 23, 59, 59, 999));
+  return { start, end };
+}
+
 export class AttendanceService {
   // Employee methods
   async markAttendance(
@@ -144,8 +158,10 @@ export class AttendanceService {
       }
     }
 
-    // Find today's record
-    const record = await attendanceRepo.findByDate(companyId, employeeId, today);
+    // Find today's record (company timezone)
+    const timeZone = (employee.workSchedule && (employee.workSchedule as any).timezone) || 'America/Lima';
+    const { start, end } = getDayRangeInTimeZone(today, timeZone);
+    const record = await attendanceRepo.findByDateRange(companyId, employeeId, start, end);
 
     if (!record) {
       // Create new record only if type is checkIn
@@ -155,7 +171,7 @@ export class AttendanceService {
 
       const created = await attendanceRepo.create(companyId, {
         employeeId,
-        date: startOfDay(today),
+        date: start,
         checkIn: today,
         latCheckIn: location?.lat,
         lngCheckIn: location?.lng

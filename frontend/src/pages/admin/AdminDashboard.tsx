@@ -124,7 +124,7 @@ export function AdminDashboard() {
         />
       </div>
 
-      {/* Today's Activity Table */}
+      {/* Today's Activity - Responsive */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-6 border-b border-gray-100 flex justify-between items-center">
             <h2 className="text-lg font-bold text-gray-900">Asistencia en Tiempo Real</h2>
@@ -138,7 +138,9 @@ export function AdminDashboard() {
                 No hay registros de asistencia para el día de hoy.
             </div>
         ) : (
-            <div className="overflow-x-auto">
+            <>
+            {/* Table for md+ */}
+            <div className="overflow-x-auto hidden md:block">
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="bg-gray-50 border-b border-gray-100 text-xs uppercase text-gray-500 font-semibold">
@@ -172,6 +174,29 @@ export function AdminDashboard() {
                     </tbody>
                 </table>
             </div>
+            {/* Cards for mobile */}
+            <div className="md:hidden divide-y divide-gray-100">
+              {todaysAttendance.map((record) => (
+                <div key={record.id} className="p-4 flex justify-between items-start">
+                  <div>
+                    <div className="font-semibold text-gray-900">{record.employeeName}</div>
+                    <div className="text-xs text-gray-500">{record.department}</div>
+                    <div className="mt-2 flex items-center gap-2 text-sm">
+                      <span className="text-gray-500">Ingreso:</span>
+                      <span className="font-mono">{record.checkIn || '--:--'}</span>
+                    </div>
+                    <div className="mt-1">
+                      <StatusBadge record={record} />
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs text-gray-500">Salida</div>
+                    <div className="font-mono text-sm">{record.checkOut || '--:--'}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            </>
         )}
       </div>
     </div>

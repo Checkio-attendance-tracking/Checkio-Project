@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { usePeruTime } from '../hooks/usePeruTime';
 import { Clock } from '../components/Clock';
 import { ActionButton } from '../components/ActionButton';
@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { attendanceService } from '../services/attendance';
 import type { User } from '../types/user';
+import type { AttendanceRecord } from '../types/attendance';
 
 interface DashboardProps {
   user: User;
@@ -18,7 +19,35 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
   const { time, loading, error, isVerified } = usePeruTime();
   const [lastAction, setLastAction] = useState<{ type: string; time: Date } | null>(null);
   const [isMarking, setIsMarking] = useState(false);
+  const [todayRecord, setTodayRecord] = useState<AttendanceRecord | null>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const loadToday = async () => {
+      try {
+        const history = await attendanceService.getMyHistory();
+        const todayStr = format(new Date(), 'yyyy-MM-dd');
+        const rec = history.find(r => r.date === todayStr) || null;
+        setTodayRecord(rec);
+      } catch (e) {
+        // silent
+      }
+    };
+    loadToday();
+  }, []);
+
+  const translateError = (msg: string) => {
+    const m = msg?.toLowerCase() || '';
+    if (m.includes('must check-in first')) return 'Debe marcar Ingreso primero';
+    if (m.includes('already checked in')) return 'Ya marcó Ingreso hoy';
+    if (m.includes('already started lunch')) return 'Ya marcó Salida al Almuerzo';
+    if (m.includes('must start lunch first')) return 'Debe marcar Salida al Almuerzo primero';
+    if (m.includes('already ended lunch')) return 'Ya marcó Regreso del Almuerzo';
+    if (m.includes('already checked out')) return 'Ya marcó Salida hoy';
+    if (m.includes('location is required')) return 'Debe permitir el acceso a su ubicación';
+    if (m.includes('outside the allowed area')) return 'Está fuera del área permitida para marcar';
+    return msg || 'Error al marcar asistencia';
+  };
 
   const handleAction = async (actionLabel: string) => {
     if (isMarking) return;
@@ -38,10 +67,16 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
       await attendanceService.mark(type);
       const now = time || new Date();
       setLastAction({ type: actionLabel, time: now });
+      // Refresh state for buttons
+      const history = await attendanceService.getMyHistory();
+      const todayStr = format(new Date(), 'yyyy-MM-dd');
+      const rec = history.find(r => r.date === todayStr) || null;
+      setTodayRecord(rec);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error(error);
-      alert(error.response?.data?.message || 'Error al marcar asistencia. Verifique que ha permitido el acceso a su ubicación.');
+      const backendMsg = error.response?.data?.message;
+      alert(translateError(backendMsg));
     } finally {
       setIsMarking(false);
     }
@@ -131,6 +166,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
               sublabel="Marcar inicio de jornada"
               icon={<LogIn />} 
               color="green" 
+              disabled={Boolean(todayRecord?.checkIn)}
               onClick={() => handleAction('Ingreso')}
             />
             
@@ -139,6 +175,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
               sublabel="Marcar inicio de refrigerio"
               icon={<Utensils />} 
               color="orange" 
+              disabled={!(todayRecord?.checkIn) || Boolean(todayRecord?.lunchStart) || Boolean(todayRecord?.checkOut)}
               onClick={() => handleAction('Salida al Almuerzo')}
             />
             
@@ -147,6 +184,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
               sublabel="Marcar fin de refrigerio"
               icon={<Utensils />} 
               color="blue" 
+              disabled={!todayRecord?.lunchStart || Boolean(todayRecord?.lunchEnd) || Boolean(todayRecord?.checkOut)}
               onClick={() => handleAction('Regreso del Almuerzo')}
             />
             
@@ -155,6 +193,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
               sublabel="Marcar fin de jornada"
               icon={<Briefcase />} 
               color="red" 
+              disabled={!(todayRecord?.checkIn) || Boolean(todayRecord?.checkOut)}
               onClick={() => handleAction('Salida')}
             />
           </section>
