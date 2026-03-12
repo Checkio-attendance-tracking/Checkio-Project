@@ -269,88 +269,174 @@ export function EmployeeHistory() {
 
             {/* Grid del Calendario */}
             <div className="p-4 sm:p-6">
-                <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+                <div className="sm:hidden">
+                    <div className="divide-y divide-gray-100">
+                        {daysInMonth.map((day) => {
+                            const record = getRecordForDate(day);
+                            const isToday = isSameDay(day, new Date());
+                            const hasMap = Boolean(record && (record.latCheckIn || record.latCheckOut));
+                            const dayLabel = format(day, "EEEE d 'de' MMMM", { locale: es });
+
+                            return (
+                                <div key={day.toISOString()} className="py-3">
+                                    <div className="flex items-start gap-3">
+                                        <div className="flex flex-col items-center pt-0.5">
+                                            <div className={`w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm ${
+                                                isToday ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700'
+                                            }`}>
+                                                {format(day, 'd')}
+                                            </div>
+                                        </div>
+
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex items-start justify-between gap-2">
+                                                <div className="min-w-0">
+                                                    <div className={`text-sm font-semibold truncate ${isToday ? 'text-indigo-700' : 'text-gray-900'}`}>
+                                                        {dayLabel}
+                                                    </div>
+                                                    <div className="text-xs text-gray-500">
+                                                        {record?.status === 'weekend'
+                                                            ? 'Fin de semana'
+                                                            : record?.status === 'absent'
+                                                                ? 'Sin marcación'
+                                                                : record
+                                                                    ? 'Con marcación'
+                                                                    : 'Sin datos'}
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center gap-2">
+                                                    {record && record.status !== 'weekend' && (
+                                                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium capitalize ${getStatusColor(record.status)}`}>
+                                                            {record.status === 'present' ? 'Asistió' :
+                                                             record.status === 'late' ? 'Tardanza' :
+                                                             record.status === 'absent' ? 'Falta' : record.status}
+                                                        </span>
+                                                    )}
+                                                    {record && record.status !== 'weekend' && (
+                                                        <button
+                                                            onClick={() => setEditingRecord(record)}
+                                                            className="p-2 -mr-2 text-gray-500 hover:text-indigo-600"
+                                                            title="Editar asistencia"
+                                                        >
+                                                            <Pencil size={18} />
+                                                        </button>
+                                                    )}
+                                                    {record && record.status !== 'weekend' && hasMap && (
+                                                        <button
+                                                            onClick={() => setSelectedRecord(record)}
+                                                            className="p-2 -mr-2 text-gray-500 hover:text-indigo-600"
+                                                            title="Ver ubicación"
+                                                        >
+                                                            <MapPin size={18} />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {record && record.status !== 'weekend' && record.status !== 'absent' ? (
+                                                <div className="mt-2 grid grid-cols-3 gap-2">
+                                                    <div className="bg-gray-50 rounded-lg px-2 py-1.5">
+                                                        <div className="text-[10px] text-gray-500">In</div>
+                                                        <div className="text-xs font-semibold text-gray-800">{record.checkIn || '--:--'}</div>
+                                                    </div>
+                                                    <div className="bg-gray-50 rounded-lg px-2 py-1.5">
+                                                        <div className="text-[10px] text-gray-500">Out</div>
+                                                        <div className="text-xs font-semibold text-gray-800">{record.checkOut || '--:--'}</div>
+                                                    </div>
+                                                    <div className="bg-indigo-50 rounded-lg px-2 py-1.5">
+                                                        <div className="text-[10px] text-indigo-700">Total</div>
+                                                        <div className="text-xs font-bold text-indigo-700">{calculateHoursWorked(record)}</div>
+                                                    </div>
+                                                </div>
+                                            ) : null}
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                <div className="hidden sm:block overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
                   <div className="min-w-[720px] sm:min-w-0">
                     <div className="grid grid-cols-7 gap-px mb-2">
-                    {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map(d => (
-                        <div key={d} className="text-center text-xs sm:text-sm font-medium text-gray-500 py-1 sm:py-2">
-                            {d}
-                        </div>
-                    ))}
+                      {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map(d => (
+                          <div key={d} className="text-center text-xs sm:text-sm font-medium text-gray-500 py-1 sm:py-2">
+                              {d}
+                          </div>
+                      ))}
                     </div>
                     <div className="grid grid-cols-7 gap-2">
-                    {/* Espacios vacíos */}
-                    {Array.from({ length: emptyDays }).map((_, i) => (
-                        <div key={`empty-${i}`} className="h-24 sm:h-32 bg-gray-50/50 rounded-lg border border-transparent" />
-                    ))}
-                    
-                    {/* Días */}
-                    {daysInMonth.map(day => {
-                        const record = getRecordForDate(day);
-                        const isToday = isSameDay(day, new Date());
-                        
-                        return (
-                            <div 
-                                key={day.toISOString()}
-                                className={`h-24 sm:h-32 p-1.5 sm:p-2 rounded-lg border flex flex-col justify-between transition-all hover:shadow-md ${
-                                    isToday ? 'border-indigo-500 ring-1 ring-indigo-500 bg-white' : 'border-gray-100 bg-white'
-                                }`}
-                            >
-                                <div className="flex justify-between items-start">
-                                    <span className={`text-xs sm:text-sm font-medium w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full ${
-                                        isToday ? 'bg-indigo-600 text-white' : 'text-gray-700'
-                                    }`}>
-                                        {format(day, 'd')}
-                                    </span>
-                                    {record && record.status !== 'weekend' && (
-                                        <div className="flex items-center gap-1">
-                                            <button 
-                                                onClick={() => setEditingRecord(record)}
-                                                className="hidden sm:inline-flex text-gray-400 hover:text-indigo-600 transition-colors p-1"
-                                                title="Editar asistencia"
-                                            >
-                                                <Pencil size={14} />
-                                            </button>
-                                            {/* Botón de Mapa */}
-                                            {(record.latCheckIn || record.latCheckOut) && (
-                                                <button 
-                                                    onClick={() => setSelectedRecord(record)}
-                                                    className="hidden sm:inline-flex text-gray-400 hover:text-indigo-600 transition-colors"
-                                                    title="Ver ubicación"
-                                                >
-                                                    <MapPin size={14} />
-                                                </button>
-                                            )}
-                                            <span className={`hidden sm:inline-flex text-[10px] px-1.5 py-0.5 rounded font-medium capitalize ${getStatusColor(record.status)}`}>
-                                                {record.status === 'present' ? 'Asistió' : 
-                                                 record.status === 'late' ? 'Tardanza' :
-                                                 record.status === 'absent' ? 'Falta' : record.status}
-                                            </span>
-                                        </div>
-                                    )}
-                                </div>
+                      {Array.from({ length: emptyDays }).map((_, i) => (
+                          <div key={`empty-${i}`} className="h-24 sm:h-32 bg-gray-50/50 rounded-lg border border-transparent" />
+                      ))}
 
-                                {record && record.status !== 'weekend' && record.status !== 'absent' ? (
-                                    <div className="space-y-1 mt-1">
-                                        <div className="text-[10px] sm:text-xs text-gray-500 flex justify-between">
-                                            <span>In:</span> <span className="font-medium text-gray-700">{record.checkIn}</span>
-                                        </div>
-                                        <div className="text-[10px] sm:text-xs text-gray-500 flex justify-between">
-                                            <span>Out:</span> <span className="font-medium text-gray-700">{record.checkOut}</span>
-                                        </div>
-                                        <div className="mt-1 pt-1 border-t border-gray-50 flex justify-between items-center">
-                                            <span className="text-[10px] text-gray-400">Total</span>
-                                            <span className="text-[11px] sm:text-xs font-bold text-indigo-600">{calculateHoursWorked(record)}</span>
-                                        </div>
-                                    </div>
-                                ) : record?.status === 'weekend' ? (
-                                    <div className="flex-1 flex items-center justify-center">
-                                        <span className="text-[10px] sm:text-xs text-gray-300 italic">Fin de semana</span>
-                                    </div>
-                                ) : null}
-                            </div>
-                        );
-                    })}
+                      {daysInMonth.map(day => {
+                          const record = getRecordForDate(day);
+                          const isToday = isSameDay(day, new Date());
+                          
+                          return (
+                              <div 
+                                  key={day.toISOString()}
+                                  className={`h-24 sm:h-32 p-1.5 sm:p-2 rounded-lg border flex flex-col justify-between transition-all hover:shadow-md ${
+                                      isToday ? 'border-indigo-500 ring-1 ring-indigo-500 bg-white' : 'border-gray-100 bg-white'
+                                  }`}
+                              >
+                                  <div className="flex justify-between items-start">
+                                      <span className={`text-xs sm:text-sm font-medium w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full ${
+                                          isToday ? 'bg-indigo-600 text-white' : 'text-gray-700'
+                                      }`}>
+                                          {format(day, 'd')}
+                                      </span>
+                                      {record && record.status !== 'weekend' && (
+                                          <div className="flex items-center gap-1">
+                                              <button 
+                                                  onClick={() => setEditingRecord(record)}
+                                                  className="hidden sm:inline-flex text-gray-400 hover:text-indigo-600 transition-colors p-1"
+                                                  title="Editar asistencia"
+                                              >
+                                                  <Pencil size={14} />
+                                              </button>
+                                              {(record.latCheckIn || record.latCheckOut) && (
+                                                  <button 
+                                                      onClick={() => setSelectedRecord(record)}
+                                                      className="hidden sm:inline-flex text-gray-400 hover:text-indigo-600 transition-colors"
+                                                      title="Ver ubicación"
+                                                  >
+                                                      <MapPin size={14} />
+                                                  </button>
+                                              )}
+                                              <span className={`hidden sm:inline-flex text-[10px] px-1.5 py-0.5 rounded font-medium capitalize ${getStatusColor(record.status)}`}>
+                                                  {record.status === 'present' ? 'Asistió' : 
+                                                   record.status === 'late' ? 'Tardanza' :
+                                                   record.status === 'absent' ? 'Falta' : record.status}
+                                              </span>
+                                          </div>
+                                      )}
+                                  </div>
+
+                                  {record && record.status !== 'weekend' && record.status !== 'absent' ? (
+                                      <div className="space-y-1 mt-1">
+                                          <div className="text-[10px] sm:text-xs text-gray-500 flex justify-between">
+                                              <span>In:</span> <span className="font-medium text-gray-700">{record.checkIn}</span>
+                                          </div>
+                                          <div className="text-[10px] sm:text-xs text-gray-500 flex justify-between">
+                                              <span>Out:</span> <span className="font-medium text-gray-700">{record.checkOut}</span>
+                                          </div>
+                                          <div className="mt-1 pt-1 border-t border-gray-50 flex justify-between items-center">
+                                              <span className="text-[10px] text-gray-400">Total</span>
+                                              <span className="text-[11px] sm:text-xs font-bold text-indigo-600">{calculateHoursWorked(record)}</span>
+                                          </div>
+                                      </div>
+                                  ) : record?.status === 'weekend' ? (
+                                      <div className="flex-1 flex items-center justify-center">
+                                          <span className="text-[10px] sm:text-xs text-gray-300 italic">Fin de semana</span>
+                                      </div>
+                                  ) : null}
+                              </div>
+                          );
+                      })}
                     </div>
                   </div>
                 </div>
