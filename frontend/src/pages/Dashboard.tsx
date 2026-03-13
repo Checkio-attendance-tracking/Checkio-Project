@@ -17,10 +17,9 @@ interface DashboardProps {
 
 export function Dashboard({ user, onLogout }: DashboardProps) {
   const { time, loading, error, isVerified } = usePeruTime();
-  const [lastAction, setLastAction] = useState<{ type: string; time: Date } | null>(null);
   const [isMarking, setIsMarking] = useState(false);
   const [todayRecord, setTodayRecord] = useState<AttendanceRecord | null>(null);
-  const [successToast, setSuccessToast] = useState<{ message: string } | null>(null);
+  const [successToast, setSuccessToast] = useState<{ actionLabel: string; at: Date } | null>(null);
   type LocationHelpKind = 'denied' | 'timeout' | 'unavailable' | 'unsupported' | 'inAppBrowser' | 'required' | 'outside';
   const [locationHelpOpen, setLocationHelpOpen] = useState(false);
   const [locationHelpKind, setLocationHelpKind] = useState<LocationHelpKind>('denied');
@@ -153,11 +152,10 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
 
       await attendanceService.mark(type, location);
       const now = time || new Date();
-      setLastAction({ type: actionLabel, time: now });
       // Refresh state for buttons
       const history = await attendanceService.getMyHistory();
       setTodayRecord(pickCurrentRecord(history));
-      setSuccessToast({ message: `Tu "${actionLabel}" ha sido exitoso!` });
+      setSuccessToast({ actionLabel, at: now });
     } catch (error: unknown) {
       console.error(error);
       const message = extractApiMessage(error);
@@ -271,17 +269,6 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
             </div>
           )}
 
-          {!isMarking && lastAction && (
-            <div className="bg-indigo-50 border border-indigo-100 text-indigo-800 px-4 py-3 rounded-lg flex items-center justify-between animate-fade-in">
-              <span className="font-medium">
-                Último registro: <span className="font-bold">{lastAction.type}</span>
-              </span>
-              <span className="text-sm opacity-75">
-                {format(lastAction.time, 'HH:mm:ss')}
-              </span>
-            </div>
-          )}
-
           {/* Actions Grid */}
           <section className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             <ActionButton 
@@ -334,21 +321,37 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
           onClick={() => setSuccessToast(null)}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200"
+            className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-6 flex items-start gap-4">
-              <div className="p-3 rounded-xl bg-green-50 text-green-600">
-                <CheckCircle2 size={28} />
+            <div className="absolute -top-10 left-1/2 -translate-x-1/2">
+              <div className="w-20 h-20 rounded-full bg-green-500 flex items-center justify-center shadow-lg">
+                <CheckCircle2 size={36} className="text-white" />
               </div>
-              <div className="flex-1">
-                <div className="text-lg font-bold text-gray-900">¡Listo!</div>
-                <div className="mt-1 text-base text-gray-700">{successToast.message}</div>
+            </div>
+
+            <div className="pt-14 px-6 pb-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-gray-900">Éxito</div>
+                <div className="mt-2 text-base text-gray-700">
+                  Has marcado de manera exitosa tu <span className="font-semibold">{successToast.actionLabel}</span> a las{' '}
+                  <span className="font-semibold">{format(successToast.at, 'HH:mm:ss')}</span>.
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => setSuccessToast(null)}
+                  className="px-6 py-2 rounded-xl bg-green-600 text-white font-semibold hover:bg-green-700 transition-colors"
+                >
+                  Aceptar
+                </button>
               </div>
               <button
                 type="button"
                 onClick={() => setSuccessToast(null)}
-                className="p-2 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                className="absolute top-3 right-3 p-2 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
                 aria-label="Cerrar"
               >
                 <X size={20} />
