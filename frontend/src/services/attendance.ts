@@ -96,7 +96,11 @@ type BackendAttendanceRecord = {
 
 function formatPeruTimeFromIso(isoString?: string | null) {
   if (!isoString) return undefined;
-  const d = new Date(isoString);
+  const normalized =
+    isoString.includes('T') && !/[zZ]$/.test(isoString) && !/[+-]\d{2}:\d{2}$/.test(isoString)
+      ? `${isoString}-05:00`
+      : isoString;
+  const d = new Date(normalized);
   const utcMinutes = d.getUTCHours() * 60 + d.getUTCMinutes();
   let peruMinutes = utcMinutes - 5 * 60;
   peruMinutes = ((peruMinutes % (24 * 60)) + (24 * 60)) % (24 * 60);

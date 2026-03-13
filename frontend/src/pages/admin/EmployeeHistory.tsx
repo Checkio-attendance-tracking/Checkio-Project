@@ -174,9 +174,13 @@ export function EmployeeHistory() {
     
       try {
         const start = parseTime(record.checkIn);
-        const lunchS = parseTime(record.lunchStart);
-        const lunchE = parseTime(record.lunchEnd);
-        const end = parseTime(record.checkOut);
+        let lunchS = parseTime(record.lunchStart);
+        let lunchE = parseTime(record.lunchEnd);
+        let end = parseTime(record.checkOut);
+
+        if (lunchS < start) lunchS += 24 * 60;
+        if (lunchE < lunchS) lunchE += 24 * 60;
+        if (end < lunchE) end += 24 * 60;
     
         const totalMinutes = (lunchS - start) + (end - lunchE);
         

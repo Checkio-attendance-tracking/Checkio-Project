@@ -120,18 +120,16 @@ export function AttendanceDetail({ employeeId, workSchedule }: AttendanceDetailP
   
     try {
       const start = parseTime(record.checkIn);
-      const lunchS = parseTime(record.lunchStart);
-      const lunchE = parseTime(record.lunchEnd);
-      const end = parseTime(record.checkOut);
-  
-      // Morning shift: Start -> LunchStart
-      const morningMinutes = lunchS - start;
-      // Afternoon shift: LunchEnd -> End
-      const afternoonMinutes = end - lunchE;
-  
-      const totalMinutes = morningMinutes + afternoonMinutes;
-      
-      if (totalMinutes < 0) return '0h 0m'; // Error case
+      let lunchS = parseTime(record.lunchStart);
+      let lunchE = parseTime(record.lunchEnd);
+      let end = parseTime(record.checkOut);
+
+      if (lunchS < start) lunchS += 24 * 60;
+      if (lunchE < lunchS) lunchE += 24 * 60;
+      if (end < lunchE) end += 24 * 60;
+
+      const totalMinutes = (lunchS - start) + (end - lunchE);
+      if (totalMinutes < 0) return '0h 0m';
 
       const h = Math.floor(totalMinutes / 60);
       const m = totalMinutes % 60;
