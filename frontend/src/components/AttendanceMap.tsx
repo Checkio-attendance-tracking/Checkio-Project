@@ -11,8 +11,8 @@ export function AttendanceMap({ record }: AttendanceMapProps) {
   // Collect points
   const points = [
     { type: 'Ingreso', lat: record.latCheckIn, lng: record.lngCheckIn, time: record.checkIn, color: 'green' },
-    { type: 'Salida Almuerzo', lat: record.latLunchStart, lng: record.lngLunchStart, time: record.lunchStart, color: 'yellow' },
-    { type: 'Regreso Almuerzo', lat: record.latLunchEnd, lng: record.lngLunchEnd, time: record.lunchEnd, color: 'blue' },
+    { type: 'Inicio Almuerzo', lat: record.latLunchStart, lng: record.lngLunchStart, time: record.lunchStart, color: 'yellow' },
+    { type: 'Fin Almuerzo', lat: record.latLunchEnd, lng: record.lngLunchEnd, time: record.lunchEnd, color: 'blue' },
     { type: 'Salida Final', lat: record.latCheckOut, lng: record.lngCheckOut, time: record.checkOut, color: 'red' },
   ].filter(p => p.lat && p.lng);
 

@@ -3,7 +3,7 @@ import { usePeruTime } from '../hooks/usePeruTime';
 import { Clock } from '../components/Clock';
 import { ActionButton } from '../components/ActionButton';
 import { Logo } from '../components/Logo';
-import { LogOut, LogIn, Utensils, Briefcase, User as UserIcon, Settings, MapPin, X, RefreshCw, AlertTriangle } from 'lucide-react';
+import { LogOut, LogIn, Utensils, Briefcase, User as UserIcon, Settings, MapPin, X, RefreshCw, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { attendanceService } from '../services/attendance';
@@ -20,6 +20,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
   const [lastAction, setLastAction] = useState<{ type: string; time: Date } | null>(null);
   const [isMarking, setIsMarking] = useState(false);
   const [todayRecord, setTodayRecord] = useState<AttendanceRecord | null>(null);
+  const [successToast, setSuccessToast] = useState<{ message: string } | null>(null);
   type LocationHelpKind = 'denied' | 'timeout' | 'unavailable' | 'unsupported' | 'inAppBrowser' | 'required' | 'outside';
   const [locationHelpOpen, setLocationHelpOpen] = useState(false);
   const [locationHelpKind, setLocationHelpKind] = useState<LocationHelpKind>('denied');
@@ -46,14 +47,20 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
     loadToday();
   }, []);
 
+  useEffect(() => {
+    if (!successToast) return;
+    const timeoutId = window.setTimeout(() => setSuccessToast(null), 2800);
+    return () => window.clearTimeout(timeoutId);
+  }, [successToast]);
+
   const translateError = (msg: string) => {
     const m = msg?.toLowerCase() || '';
     if (m.includes('must check-in first')) return 'Debe marcar Ingreso primero';
     if (m.includes('must check-out first')) return 'Tiene una asistencia abierta. Marque Salida para cerrar.';
     if (m.includes('already checked in')) return 'Ya marcó Ingreso hoy';
-    if (m.includes('already started lunch')) return 'Ya marcó Salida al Almuerzo';
-    if (m.includes('must start lunch first')) return 'Debe marcar Salida al Almuerzo primero';
-    if (m.includes('already ended lunch')) return 'Ya marcó Regreso del Almuerzo';
+    if (m.includes('already started lunch')) return 'Ya marcó Inicio de Almuerzo';
+    if (m.includes('must start lunch first')) return 'Debe marcar Inicio de Almuerzo primero';
+    if (m.includes('already ended lunch')) return 'Ya marcó Fin de Almuerzo';
     if (m.includes('already checked out')) return 'Ya marcó Salida hoy';
     if (m.includes('location is required')) return 'Debe permitir el acceso a su ubicación';
     if (m.includes('outside the allowed area')) return 'Está fuera del área permitida para marcar';
@@ -114,8 +121,8 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
     
     switch (actionLabel) {
       case 'Ingreso': type = 'checkIn'; break;
-      case 'Salida al Almuerzo': type = 'lunchStart'; break;
-      case 'Regreso del Almuerzo': type = 'lunchEnd'; break;
+      case 'Inicio de Almuerzo': type = 'lunchStart'; break;
+      case 'Fin de Almuerzo': type = 'lunchEnd'; break;
       case 'Salida': type = 'checkOut'; break;
       default: setIsMarking(false); return;
     }
@@ -150,6 +157,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
       // Refresh state for buttons
       const history = await attendanceService.getMyHistory();
       setTodayRecord(pickCurrentRecord(history));
+      setSuccessToast({ message: `Tu "${actionLabel}" ha sido exitoso!` });
     } catch (error: unknown) {
       console.error(error);
       const message = extractApiMessage(error);
@@ -286,21 +294,21 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
             />
             
             <ActionButton 
-              label="Salida al Almuerzo" 
+              label="Inicio de Almuerzo" 
               sublabel="Marcar inicio de refrigerio"
               icon={<Utensils />} 
               color="orange" 
               disabled={!(todayRecord?.checkIn) || Boolean(todayRecord?.lunchStart) || Boolean(todayRecord?.checkOut)}
-              onClick={() => handleAction('Salida al Almuerzo')}
+              onClick={() => handleAction('Inicio de Almuerzo')}
             />
             
             <ActionButton 
-              label="Regreso del Almuerzo" 
+              label="Fin de Almuerzo" 
               sublabel="Marcar fin de refrigerio"
               icon={<Utensils />} 
               color="blue" 
               disabled={!todayRecord?.lunchStart || Boolean(todayRecord?.lunchEnd) || Boolean(todayRecord?.checkOut)}
-              onClick={() => handleAction('Regreso del Almuerzo')}
+              onClick={() => handleAction('Fin de Almuerzo')}
             />
             
             <ActionButton 
@@ -319,6 +327,28 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
       <footer className="py-6 text-center text-gray-400 text-sm">
         &copy; {new Date().getFullYear()} Checkio. Sistema de Control de Asistencia.
       </footer>
+
+      {successToast && (
+        <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 z-50">
+          <div className="sm:w-[420px] ml-auto bg-white border border-green-100 shadow-xl rounded-xl px-4 py-3 flex items-start gap-3">
+            <div className="mt-0.5 text-green-600">
+              <CheckCircle2 size={22} />
+            </div>
+            <div className="flex-1">
+              <div className="text-sm font-semibold text-gray-900">¡Listo!</div>
+              <div className="text-sm text-gray-600">{successToast.message}</div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSuccessToast(null)}
+              className="p-1 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+              aria-label="Cerrar"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {locationHelpOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">

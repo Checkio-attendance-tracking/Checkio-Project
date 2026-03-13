@@ -84,7 +84,7 @@ export function EmployeeHistory() {
   const handleExport = () => {
     if (records.length === 0) return;
     
-    const headers = ['Fecha', 'Estado', 'Ingreso', 'Salida Almuerzo', 'Regreso Almuerzo', 'Salida', 'Horas Trabajadas'];
+    const headers = ['Fecha', 'Estado', 'Ingreso', 'Inicio Almuerzo', 'Fin Almuerzo', 'Salida', 'Horas Trabajadas'];
     const csvContent = [
       headers.join(','),
       ...records.map(r => [
@@ -558,11 +558,11 @@ export function EmployeeHistory() {
                             <input type="time" name="checkIn" defaultValue={editingRecord.checkIn} className="w-full border border-gray-300 rounded-lg p-2" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Salida Almuerzo</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Inicio Almuerzo</label>
                             <input type="time" name="lunchStart" defaultValue={editingRecord.lunchStart} className="w-full border border-gray-300 rounded-lg p-2" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Regreso Almuerzo</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Fin Almuerzo</label>
                             <input type="time" name="lunchEnd" defaultValue={editingRecord.lunchEnd} className="w-full border border-gray-300 rounded-lg p-2" />
                         </div>
                         <div>
