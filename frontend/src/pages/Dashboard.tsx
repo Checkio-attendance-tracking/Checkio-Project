@@ -46,12 +46,6 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
     loadToday();
   }, []);
 
-  useEffect(() => {
-    if (!successToast) return;
-    const timeoutId = window.setTimeout(() => setSuccessToast(null), 2800);
-    return () => window.clearTimeout(timeoutId);
-  }, [successToast]);
-
   const translateError = (msg: string) => {
     const m = msg?.toLowerCase() || '';
     if (m.includes('must check-in first')) return 'Debe marcar Ingreso primero';
@@ -318,43 +312,27 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
       {successToast && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-          onClick={() => setSuccessToast(null)}
         >
           <div
-            className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200"
-            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200"
           >
-            <div className="absolute -top-10 left-1/2 -translate-x-1/2">
-              <div className="w-20 h-20 rounded-full bg-green-500 flex items-center justify-center shadow-lg">
+            <div className="p-8 text-center">
+              <div className="mx-auto w-20 h-20 rounded-full bg-green-500 flex items-center justify-center shadow-lg">
                 <CheckCircle2 size={36} className="text-white" />
               </div>
-            </div>
 
-            <div className="pt-14 px-6 pb-6">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">Éxito</div>
-                <div className="mt-2 text-base text-gray-700">
-                  Has marcado de manera exitosa tu <span className="font-semibold">{successToast.actionLabel}</span> a las{' '}
-                  <span className="font-semibold">{format(successToast.at, 'HH:mm:ss')}</span>.
-                </div>
+              <div className="mt-4 text-2xl font-bold text-gray-900">Éxito</div>
+              <div className="mt-2 text-base text-gray-700">
+                Has marcado de manera exitosa tu <span className="font-semibold">{successToast.actionLabel}</span> a las{' '}
+                <span className="font-semibold">{format(successToast.at, 'HH:mm:ss')}</span>.
               </div>
 
-              <div className="mt-6 flex justify-center">
-                <button
-                  type="button"
-                  onClick={() => setSuccessToast(null)}
-                  className="px-6 py-2 rounded-xl bg-green-600 text-white font-semibold hover:bg-green-700 transition-colors"
-                >
-                  Aceptar
-                </button>
-              </div>
               <button
                 type="button"
                 onClick={() => setSuccessToast(null)}
-                className="absolute top-3 right-3 p-2 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-                aria-label="Cerrar"
+                className="mt-6 w-full px-6 py-3 rounded-xl bg-green-600 text-white font-semibold hover:bg-green-700 transition-colors"
               >
-                <X size={20} />
+                Aceptar
               </button>
             </div>
           </div>
