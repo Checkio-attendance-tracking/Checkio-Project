@@ -329,23 +329,31 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
       </footer>
 
       {successToast && (
-        <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 z-50">
-          <div className="sm:w-[420px] ml-auto bg-white border border-green-100 shadow-xl rounded-xl px-4 py-3 flex items-start gap-3">
-            <div className="mt-0.5 text-green-600">
-              <CheckCircle2 size={22} />
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={() => setSuccessToast(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 flex items-start gap-4">
+              <div className="p-3 rounded-xl bg-green-50 text-green-600">
+                <CheckCircle2 size={28} />
+              </div>
+              <div className="flex-1">
+                <div className="text-lg font-bold text-gray-900">¡Listo!</div>
+                <div className="mt-1 text-base text-gray-700">{successToast.message}</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSuccessToast(null)}
+                className="p-2 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                aria-label="Cerrar"
+              >
+                <X size={20} />
+              </button>
             </div>
-            <div className="flex-1">
-              <div className="text-sm font-semibold text-gray-900">¡Listo!</div>
-              <div className="text-sm text-gray-600">{successToast.message}</div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setSuccessToast(null)}
-              className="p-1 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-              aria-label="Cerrar"
-            >
-              <X size={18} />
-            </button>
           </div>
         </div>
       )}
