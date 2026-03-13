@@ -115,17 +115,20 @@ export function EmployeeHistory() {
     setIsUpdating(true);
     const formData = new FormData(e.currentTarget);
     
-    // Helper to combine date and time
-    const combineDateTime = (timeStr: string) => {
-        if (!timeStr) return undefined;
-        return `${editingRecord.date}T${timeStr}:00`;
+    const toPeruISOString = (dateStr: string, timeStr: string) => {
+      if (!timeStr) return undefined;
+      const [y, m, d] = dateStr.split('-').map(Number);
+      const [hh, mm] = timeStr.split(':').map(Number);
+      if (!y || !m || !d || Number.isNaN(hh) || Number.isNaN(mm)) return undefined;
+      const utcMs = Date.UTC(y, m - 1, d, hh + 5, mm, 0, 0);
+      return new Date(utcMs).toISOString();
     };
 
     const updateData = {
-        checkIn: combineDateTime(formData.get('checkIn') as string),
-        lunchStart: combineDateTime(formData.get('lunchStart') as string),
-        lunchEnd: combineDateTime(formData.get('lunchEnd') as string),
-        checkOut: combineDateTime(formData.get('checkOut') as string),
+        checkIn: toPeruISOString(editingRecord.date, formData.get('checkIn') as string),
+        lunchStart: toPeruISOString(editingRecord.date, formData.get('lunchStart') as string),
+        lunchEnd: toPeruISOString(editingRecord.date, formData.get('lunchEnd') as string),
+        checkOut: toPeruISOString(editingRecord.date, formData.get('checkOut') as string),
     };
 
     try {

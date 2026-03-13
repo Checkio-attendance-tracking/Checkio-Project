@@ -94,29 +94,38 @@ type BackendAttendanceRecord = {
   status?: AttendanceRecord['status'] | null;
 };
 
+function formatPeruTimeFromIso(isoString?: string | null) {
+  if (!isoString) return undefined;
+  const d = new Date(isoString);
+  const utcMinutes = d.getUTCHours() * 60 + d.getUTCMinutes();
+  let peruMinutes = utcMinutes - 5 * 60;
+  peruMinutes = ((peruMinutes % (24 * 60)) + (24 * 60)) % (24 * 60);
+  const hh = String(Math.floor(peruMinutes / 60)).padStart(2, '0');
+  const mm = String(peruMinutes % 60).padStart(2, '0');
+  return `${hh}:${mm}`;
+}
+
 function mapBackendAttendanceToFrontend(record: unknown): AttendanceRecord {
   const r = record as BackendAttendanceRecord;
-  const formatTime = (isoString?: string | null) =>
-    isoString ? format(new Date(isoString), 'HH:mm') : undefined;
 
   return {
     id: r.id,
     employeeId: r.employeeId,
     date: r.date.split('T')[0],
     
-    checkIn: formatTime(r.checkIn),
+    checkIn: formatPeruTimeFromIso(r.checkIn),
     latCheckIn: r.latCheckIn ?? undefined,
     lngCheckIn: r.lngCheckIn ?? undefined,
     
-    lunchStart: formatTime(r.lunchStart),
+    lunchStart: formatPeruTimeFromIso(r.lunchStart),
     latLunchStart: r.latLunchStart ?? undefined,
     lngLunchStart: r.lngLunchStart ?? undefined,
     
-    lunchEnd: formatTime(r.lunchEnd),
+    lunchEnd: formatPeruTimeFromIso(r.lunchEnd),
     latLunchEnd: r.latLunchEnd ?? undefined,
     lngLunchEnd: r.lngLunchEnd ?? undefined,
     
-    checkOut: formatTime(r.checkOut),
+    checkOut: formatPeruTimeFromIso(r.checkOut),
     latCheckOut: r.latCheckOut ?? undefined,
     lngCheckOut: r.lngCheckOut ?? undefined,
     
