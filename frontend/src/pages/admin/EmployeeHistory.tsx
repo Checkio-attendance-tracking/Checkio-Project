@@ -163,7 +163,7 @@ export function EmployeeHistory() {
   };
 
   const calculateHoursWorked = (record: AttendanceRecord | undefined): string => {
-      if (!record || !record.checkIn || !record.checkOut || !record.lunchStart || !record.lunchEnd) {
+      if (!record || !record.checkIn || !record.checkOut) {
         return '-';
       }
     
@@ -174,15 +174,24 @@ export function EmployeeHistory() {
     
       try {
         const start = parseTime(record.checkIn);
-        let lunchS = parseTime(record.lunchStart);
-        let lunchE = parseTime(record.lunchEnd);
         let end = parseTime(record.checkOut);
 
-        if (lunchS < start) lunchS += 24 * 60;
-        if (lunchE < lunchS) lunchE += 24 * 60;
-        if (end < lunchE) end += 24 * 60;
+        if (end < start) end += 24 * 60;
+
+        let lunchMinutes = 0;
+        if (record.lunchStart && record.lunchEnd) {
+          let lunchS = parseTime(record.lunchStart);
+          let lunchE = parseTime(record.lunchEnd);
+
+          if (lunchS < start) lunchS += 24 * 60;
+          if (lunchE < lunchS) lunchE += 24 * 60;
+
+          const overlapStart = Math.max(start, lunchS);
+          const overlapEnd = Math.min(end, lunchE);
+          lunchMinutes = Math.max(0, overlapEnd - overlapStart);
+        }
     
-        const totalMinutes = (lunchS - start) + (end - lunchE);
+        const totalMinutes = (end - start) - lunchMinutes;
         
         if (totalMinutes < 0) return '-';
   

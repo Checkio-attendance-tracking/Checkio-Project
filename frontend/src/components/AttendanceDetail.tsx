@@ -115,7 +115,7 @@ export function AttendanceDetail({ employeeId, workSchedule }: AttendanceDetailP
   };
 
   const calculateHoursWorked = (record: AttendanceRecord | undefined): string => {
-    if (!record || !record.checkIn || !record.checkOut || !record.lunchStart || !record.lunchEnd) {
+    if (!record || !record.checkIn || !record.checkOut) {
       return '0h 0m';
     }
   
@@ -126,15 +126,24 @@ export function AttendanceDetail({ employeeId, workSchedule }: AttendanceDetailP
   
     try {
       const start = parseTime(record.checkIn);
-      let lunchS = parseTime(record.lunchStart);
-      let lunchE = parseTime(record.lunchEnd);
       let end = parseTime(record.checkOut);
 
-      if (lunchS < start) lunchS += 24 * 60;
-      if (lunchE < lunchS) lunchE += 24 * 60;
-      if (end < lunchE) end += 24 * 60;
+      if (end < start) end += 24 * 60;
 
-      const totalMinutes = (lunchS - start) + (end - lunchE);
+      let lunchMinutes = 0;
+      if (record.lunchStart && record.lunchEnd) {
+        let lunchS = parseTime(record.lunchStart);
+        let lunchE = parseTime(record.lunchEnd);
+
+        if (lunchS < start) lunchS += 24 * 60;
+        if (lunchE < lunchS) lunchE += 24 * 60;
+
+        const overlapStart = Math.max(start, lunchS);
+        const overlapEnd = Math.min(end, lunchE);
+        lunchMinutes = Math.max(0, overlapEnd - overlapStart);
+      }
+
+      const totalMinutes = (end - start) - lunchMinutes;
       if (totalMinutes < 0) return '0h 0m';
 
       const h = Math.floor(totalMinutes / 60);
