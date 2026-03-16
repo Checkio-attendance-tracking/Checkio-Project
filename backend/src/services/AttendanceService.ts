@@ -71,6 +71,11 @@ function getDayKeyInTimeZone(date: Date, timeZone: string): WorkDayKey {
   return map[weekday] ?? fallbackDayKey(date);
 }
 
+function getDayKeyFromUtcDate(date: Date): WorkDayKey {
+  const map: Record<number, WorkDayKey> = { 0: 'sun', 1: 'mon', 2: 'tue', 3: 'wed', 4: 'thu', 5: 'fri', 6: 'sat' };
+  return map[date.getUTCDay()] ?? 'mon';
+}
+
 function getSchedule(raw: unknown): WorkSchedule | undefined {
   if (!raw || typeof raw !== 'object') return undefined;
   const schedule = raw as WorkSchedule;
@@ -81,7 +86,7 @@ function getSchedule(raw: unknown): WorkSchedule | undefined {
 function computeStatus(record: any, scheduleOverride?: unknown): AttendanceStatus {
   const schedule = getSchedule(scheduleOverride) ?? getSchedule(record.employee?.workSchedule);
   if (!schedule) {
-    const dayKey = getDayKeyInTimeZone(new Date(record.date), 'America/Lima');
+    const dayKey = getDayKeyFromUtcDate(new Date(record.date));
     if (!record.checkIn && (dayKey === 'sat' || dayKey === 'sun')) {
       return 'weekend';
     }
@@ -89,7 +94,7 @@ function computeStatus(record: any, scheduleOverride?: unknown): AttendanceStatu
   }
 
   const timeZone = schedule.timezone || 'America/Lima';
-  const dayKey = getDayKeyInTimeZone(new Date(record.date), timeZone);
+  const dayKey = getDayKeyFromUtcDate(new Date(record.date));
   const day = schedule.days?.[dayKey];
 
   if (!day || !day.enabled) {
