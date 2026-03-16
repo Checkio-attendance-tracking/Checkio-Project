@@ -173,7 +173,7 @@ export function AttendanceDetail({ employeeId, workSchedule }: AttendanceDetailP
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-2">
+      <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory sm:mx-0 sm:px-0 sm:pb-0 sm:grid sm:grid-cols-7 sm:overflow-visible">
         {weekDays.map((day) => {
           const record = getRecordForDate(day);
           const isToday = isSameDay(day, new Date());
@@ -188,7 +188,7 @@ export function AttendanceDetail({ employeeId, workSchedule }: AttendanceDetailP
             <div 
               key={day.toISOString()} 
               className={`
-                rounded-lg border p-3 transition-all
+                rounded-lg border p-3 transition-all shrink-0 min-w-[170px] snap-start sm:min-w-0 sm:shrink
                 ${isToday ? 'ring-2 ring-indigo-500 ring-offset-2' : ''}
                 ${getStatusColor(displayStatus as string)}
               `}

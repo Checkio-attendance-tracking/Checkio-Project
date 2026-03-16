@@ -103,7 +103,81 @@ export function EmployeeList() {
 
       {/* Employees Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="sm:hidden">
+          <div className="divide-y divide-gray-100">
+            {filteredUsers.map((user) => {
+              const isExpanded = expandedEmployeeId === user.id;
+              return (
+                <div key={user.id} className="p-4">
+                  <button
+                    type="button"
+                    className="w-full text-left"
+                    onClick={() => toggleEmployee(user.id)}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-sm shrink-0">
+                          {user.firstName[0]}{user.lastName[0]}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-sm font-semibold text-gray-900 truncate">{user.firstName} {user.lastName}</div>
+                          <div className="text-xs text-gray-500 truncate">{user.email}</div>
+                        </div>
+                      </div>
+
+                      <div className="shrink-0 flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          className="text-indigo-600 hover:text-indigo-900 transition-colors p-2 rounded hover:bg-indigo-50"
+                          title="Editar"
+                          onClick={() => navigate(`/admin/employees/${user.id}/edit`)}
+                        >
+                          <Pencil size={18} />
+                        </button>
+                        <button
+                          type="button"
+                          className="text-red-600 hover:text-red-900 transition-colors p-2 rounded hover:bg-red-50"
+                          title="Dar de baja / Eliminar"
+                          onClick={() => handleDeleteClick(user.id)}
+                        >
+                          <UserX size={18} />
+                        </button>
+                        <span className="text-gray-400 p-2">
+                          {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        user.status === 'active'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {user.status === 'active' ? 'Activo' : 'Inactivo'}
+                      </span>
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-700">
+                        {user.role === 'admin' ? <Shield size={14} className="text-indigo-500" /> : <UserIcon size={14} />}
+                        <span className="capitalize">{user.role === 'admin' ? 'RRHH' : user.role}</span>
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {user.department}
+                      </span>
+                    </div>
+                  </button>
+
+                  {isExpanded && (
+                    <div className="mt-4">
+                      <AttendanceDetail employeeId={user.id} workSchedule={user.workSchedule} />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-100">
@@ -191,7 +265,7 @@ export function EmployeeList() {
             </tbody>
           </table>
         </div>
-        
+
         {filteredUsers.length === 0 && (
           <div className="p-8 text-center text-gray-500">
             No se encontraron empleados que coincidan con tu búsqueda.
