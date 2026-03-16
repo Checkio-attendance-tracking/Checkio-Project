@@ -148,25 +148,27 @@ export function AttendanceDetail({ employeeId, workSchedule }: AttendanceDetailP
 
   return (
     <div className="bg-white rounded-lg p-6 animate-fade-in border border-indigo-100 shadow-inner bg-indigo-50/30">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <h3 className="text-lg font-semibold text-gray-800 flex items-center">
           <CalendarIcon className="mr-2 text-indigo-600" size={20} />
           Historial de Asistencia
         </h3>
-        
-        <div className="flex items-center space-x-2 bg-white rounded-lg shadow-sm p-1 border border-gray-200">
-          <button 
+
+        <div className="flex items-center gap-2 bg-white rounded-lg shadow-sm p-1 border border-gray-200 w-full sm:w-auto">
+          <button
             onClick={handlePrevWeek}
-            className="p-1 hover:bg-gray-100 rounded text-gray-600 transition-colors"
+            className="p-1 hover:bg-gray-100 rounded text-gray-600 transition-colors shrink-0"
+            aria-label="Semana anterior"
           >
             <ChevronLeft size={20} />
           </button>
-          <span className="text-sm font-medium px-2 text-gray-600 min-w-[140px] text-center">
+          <span className="text-sm font-medium px-2 text-gray-600 flex-1 text-center truncate sm:flex-none sm:min-w-[140px]">
             {format(currentWeekStart, "d 'de' MMMM", { locale: es })} - {format(addDays(currentWeekStart, 6), "d 'de' MMMM", { locale: es })}
           </span>
-          <button 
+          <button
             onClick={handleNextWeek}
-            className="p-1 hover:bg-gray-100 rounded text-gray-600 transition-colors"
+            className="p-1 hover:bg-gray-100 rounded text-gray-600 transition-colors shrink-0"
+            aria-label="Semana siguiente"
           >
             <ChevronRight size={20} />
           </button>
