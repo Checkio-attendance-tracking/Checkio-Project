@@ -25,7 +25,7 @@ function deg2rad(deg: number) {
   return deg * (Math.PI/180)
 }
 
-type AttendanceStatus = 'present' | 'absent' | 'late' | 'weekend';
+type AttendanceStatus = 'present' | 'absent' | 'late' | 'weekend' | 'dayOff';
 type WorkDayKey = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
 
 type WorkSchedule = {
@@ -81,6 +81,10 @@ function getSchedule(raw: unknown): WorkSchedule | undefined {
 function computeStatus(record: any, scheduleOverride?: unknown): AttendanceStatus {
   const schedule = getSchedule(scheduleOverride) ?? getSchedule(record.employee?.workSchedule);
   if (!schedule) {
+    const dayKey = getDayKeyInTimeZone(new Date(record.date), 'America/Lima');
+    if (!record.checkIn && (dayKey === 'sat' || dayKey === 'sun')) {
+      return 'weekend';
+    }
     return record.checkIn ? 'present' : 'absent';
   }
 
@@ -89,7 +93,7 @@ function computeStatus(record: any, scheduleOverride?: unknown): AttendanceStatu
   const day = schedule.days?.[dayKey];
 
   if (!day || !day.enabled) {
-    return 'weekend';
+    return dayKey === 'sat' || dayKey === 'sun' ? 'weekend' : 'dayOff';
   }
 
   if (!record.checkIn) {

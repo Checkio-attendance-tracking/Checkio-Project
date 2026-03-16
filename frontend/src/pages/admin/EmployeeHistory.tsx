@@ -202,6 +202,7 @@ export function EmployeeHistory() {
       case 'absent': return 'bg-red-100 text-red-700';
       case 'vacation': return 'bg-blue-100 text-blue-700';
       case 'weekend': return 'bg-gray-50 text-gray-400';
+      case 'dayOff': return 'bg-gray-50 text-gray-400';
       default: return 'bg-gray-100 text-gray-600';
     }
   };
@@ -324,6 +325,8 @@ export function EmployeeHistory() {
                                                     <div className="text-xs text-gray-500">
                                                         {record?.status === 'weekend'
                                                             ? 'Fin de semana'
+                                                            : record?.status === 'dayOff'
+                                                                ? 'Día libre'
                                                             : record?.status === 'absent'
                                                                 ? 'Sin marcación'
                                                                 : record
@@ -333,14 +336,14 @@ export function EmployeeHistory() {
                                                 </div>
 
                                                 <div className="flex items-center gap-2">
-                                                    {record && record.status !== 'weekend' && (
+                                                    {record && record.status !== 'weekend' && record.status !== 'dayOff' && (
                                                         <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium capitalize ${getStatusColor(record.status)}`}>
                                                             {record.status === 'present' ? 'Asistió' :
                                                              record.status === 'late' ? 'Tardanza' :
                                                              record.status === 'absent' ? 'Falta' : record.status}
                                                         </span>
                                                     )}
-                                                    {record && record.status !== 'weekend' && (
+                                                    {record && record.status !== 'weekend' && record.status !== 'dayOff' && (
                                                         <button
                                                             onClick={() => setEditingRecord(record)}
                                                             className="p-2 -mr-2 text-gray-500 hover:text-indigo-600"
@@ -349,7 +352,7 @@ export function EmployeeHistory() {
                                                             <Pencil size={18} />
                                                         </button>
                                                     )}
-                                                    {record && record.status !== 'weekend' && hasMap && (
+                                                    {record && record.status !== 'weekend' && record.status !== 'dayOff' && hasMap && (
                                                         <button
                                                             onClick={() => setSelectedRecord(record)}
                                                             className="p-2 -mr-2 text-gray-500 hover:text-indigo-600"
@@ -361,7 +364,7 @@ export function EmployeeHistory() {
                                                 </div>
                                             </div>
 
-                                            {record && record.status !== 'weekend' && record.status !== 'absent' ? (
+                                            {record && record.status !== 'weekend' && record.status !== 'dayOff' && record.status !== 'absent' ? (
                                                 <div className="mt-2 grid grid-cols-3 gap-2">
                                                     <div className="bg-gray-50 rounded-lg px-2 py-1.5">
                                                         <div className="text-[10px] text-gray-500">In</div>
@@ -416,7 +419,7 @@ export function EmployeeHistory() {
                                       }`}>
                                           {format(day, 'd')}
                                       </span>
-                                      {record && record.status !== 'weekend' && (
+                                      {record && record.status !== 'weekend' && record.status !== 'dayOff' && (
                                           <div className="flex items-center gap-1">
                                               <button 
                                                   onClick={() => setEditingRecord(record)}
@@ -437,13 +440,16 @@ export function EmployeeHistory() {
                                               <span className={`hidden sm:inline-flex text-[10px] px-1.5 py-0.5 rounded font-medium capitalize ${getStatusColor(record.status)}`}>
                                                   {record.status === 'present' ? 'Asistió' : 
                                                    record.status === 'late' ? 'Tardanza' :
-                                                   record.status === 'absent' ? 'Falta' : record.status}
+                                                   record.status === 'absent' ? 'Falta' :
+                                                   record.status === 'vacation' ? 'Vacaciones' :
+                                                   record.status === 'pending' ? 'Pendiente' :
+                                                   record.status}
                                               </span>
                                           </div>
                                       )}
                                   </div>
 
-                                  {record && record.status !== 'weekend' && record.status !== 'absent' ? (
+                                  {record && record.status !== 'weekend' && record.status !== 'dayOff' && record.status !== 'absent' ? (
                                       <div className="space-y-1 mt-1">
                                           <div className="text-[10px] sm:text-xs text-gray-500 flex justify-between">
                                               <span>In:</span> <span className="font-medium text-gray-700">{record.checkIn}</span>
@@ -459,6 +465,10 @@ export function EmployeeHistory() {
                                   ) : record?.status === 'weekend' ? (
                                       <div className="flex-1 flex items-center justify-center">
                                           <span className="text-[10px] sm:text-xs text-gray-300 italic">Fin de semana</span>
+                                      </div>
+                                  ) : record?.status === 'dayOff' ? (
+                                      <div className="flex-1 flex items-center justify-center">
+                                          <span className="text-[10px] sm:text-xs text-gray-300 italic">Día libre</span>
                                       </div>
                                   ) : null}
                               </div>

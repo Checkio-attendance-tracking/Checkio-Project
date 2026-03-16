@@ -60,12 +60,16 @@ export function AttendanceDetail({ employeeId, workSchedule }: AttendanceDetailP
     return map[weekday] ?? fallbackDayKey(date);
   };
 
-  const isOffDay = (date: Date) => {
+  const getNonWorkStatus = (date: Date): 'weekend' | 'dayOff' | undefined => {
     if (!workSchedule) {
-      return date.getDay() === 0 || date.getDay() === 6;
+      return date.getDay() === 0 || date.getDay() === 6 ? 'weekend' : undefined;
     }
+
     const key = getWorkDayKey(date);
-    return !workSchedule.days[key]?.enabled;
+    const enabled = Boolean(workSchedule.days[key]?.enabled);
+    if (enabled) return undefined;
+
+    return key === 'sat' || key === 'sun' ? 'weekend' : 'dayOff';
   };
 
   const getRecordForDate = (date: Date) => {
@@ -91,6 +95,7 @@ export function AttendanceDetail({ employeeId, workSchedule }: AttendanceDetailP
       case 'absent': return 'bg-red-100 text-red-700 border-red-200';
       case 'vacation': return 'bg-blue-100 text-blue-700 border-blue-200';
       case 'weekend': return 'bg-gray-50 text-gray-400 border-gray-100';
+      case 'dayOff': return 'bg-gray-50 text-gray-400 border-gray-100';
       case 'pending': return 'bg-gray-50 text-gray-400 border-dashed border-gray-200';
       default: return 'bg-gray-100 text-gray-600';
     }
@@ -103,6 +108,7 @@ export function AttendanceDetail({ employeeId, workSchedule }: AttendanceDetailP
       case 'absent': return 'Falta';
       case 'vacation': return 'Vacaciones';
       case 'weekend': return 'Fin de Semana';
+      case 'dayOff': return 'Día libre';
       case 'pending': return 'Pendiente';
       default: return '-';
     }
@@ -171,12 +177,12 @@ export function AttendanceDetail({ employeeId, workSchedule }: AttendanceDetailP
         {weekDays.map((day) => {
           const record = getRecordForDate(day);
           const isToday = isSameDay(day, new Date());
-          const offDay = isOffDay(day);
-          const status = record?.status || (offDay ? 'weekend' : 'absent');
+          const nonWorkStatus = getNonWorkStatus(day);
+          const status = record?.status || (nonWorkStatus ?? 'absent');
           
           // Only show absent if date is in the past
           const isPast = day < new Date();
-          const displayStatus = (!record && !isPast && !offDay) ? 'pending' : status;
+          const displayStatus = (!record && !isPast && !nonWorkStatus) ? 'pending' : status;
 
           return (
             <div 

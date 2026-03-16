@@ -14,7 +14,7 @@ export interface AttendanceRecord {
   checkOut?: string; // HH:mm
   latCheckOut?: number;
   lngCheckOut?: number;
-  status: 'present' | 'absent' | 'late' | 'vacation' | 'weekend' | 'pending';
+  status: 'present' | 'absent' | 'late' | 'vacation' | 'weekend' | 'dayOff' | 'pending';
 }
 
 export const MOCK_ATTENDANCE: AttendanceRecord[] = [
