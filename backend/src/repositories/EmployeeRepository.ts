@@ -2,19 +2,41 @@ import { prisma } from "../config/database";
 import { Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
+function deserializeWorkSchedule(raw: unknown): unknown {
+  if (!raw || typeof raw !== "string") return raw;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return undefined;
+  }
+}
+
+function serializeWorkSchedule(raw: unknown): string | undefined {
+  if (!raw) return undefined;
+  if (typeof raw === "string") return raw;
+  try {
+    return JSON.stringify(raw);
+  } catch {
+    return undefined;
+  }
+}
+
 export class EmployeeRepository {
   async findAll(companyId: string) {
-    return prisma.employee.findMany({
+    const rows = await prisma.employee.findMany({
       where: { companyId },
       orderBy: { createdAt: 'desc' }
     });
+    return rows.map((r) => ({ ...r, workSchedule: deserializeWorkSchedule(r.workSchedule) }));
   }
 
   async findById(companyId: string, id: string) {
-    return prisma.employee.findFirst({
+    const row = await prisma.employee.findFirst({
       where: { companyId, id },
       include: { user: true }
     });
+    if (!row) return null;
+    return { ...row, workSchedule: deserializeWorkSchedule(row.workSchedule) };
   }
 
   async findByDocument(companyId: string, documentId: string) {
@@ -26,6 +48,7 @@ export class EmployeeRepository {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async create(companyId: string, data: any) {
     const { password, role, ...employeeData } = data;
+    employeeData.workSchedule = serializeWorkSchedule(employeeData.workSchedule);
 
     return prisma.$transaction(async (tx) => {
       const employee = await tx.employee.create({
@@ -56,6 +79,7 @@ export class EmployeeRepository {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async update(companyId: string, id: string, data: any) {
     const { password, role, ...employeeData } = data;
+    employeeData.workSchedule = serializeWorkSchedule(employeeData.workSchedule);
 
     // Ensure belongs to company
     const exists = await this.findById(companyId, id);

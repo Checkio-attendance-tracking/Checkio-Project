@@ -1,10 +1,14 @@
-import { useState, useEffect } from 'react';
-import { Users, UserCheck, Clock, UserX, Calendar, RefreshCw } from 'lucide-react';
+import { useState, useEffect, Suspense, lazy } from 'react';
+import { Users, UserCheck, Clock, UserX, Calendar, RefreshCw, Download, MapPin, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { employeeService } from '../../services/employee';
 import { attendanceService } from '../../services/attendance';
 import type { AttendanceRecord } from '../../types/attendance';
+
+const DailyAttendanceMap = lazy(() =>
+  import('../../components/DailyAttendanceMap').then((module) => ({ default: module.DailyAttendanceMap }))
+);
 
 export function AdminDashboard() {
   const [loading, setLoading] = useState(true);
@@ -15,6 +19,7 @@ export function AdminDashboard() {
     absent: 0
   });
   const [todaysAttendance, setTodaysAttendance] = useState<(AttendanceRecord & { employeeName: string, department: string })[]>([]);
+  const [showDailyMap, setShowDailyMap] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -64,6 +69,34 @@ export function AdminDashboard() {
     }
   };
 
+  const exportDailyCsv = () => {
+    if (todaysAttendance.length === 0) return;
+
+    const escapeCsv = (value: string) => `"${value.replaceAll('"', '""')}"`;
+
+    const headers = ['Fecha', 'Empleado', 'Departamento', 'Ingreso', 'Inicio Almuerzo', 'Fin Almuerzo', 'Salida', 'Estado'];
+    const rows = todaysAttendance.map((r) => ([
+      r.date,
+      r.employeeName,
+      r.department,
+      r.checkIn || '',
+      r.lunchStart || '',
+      r.lunchEnd || '',
+      r.checkOut || '',
+      r.status || ''
+    ]).map((v) => escapeCsv(String(v))).join(','));
+
+    const csvContent = [headers.map(escapeCsv).join(','), ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `asistencia_diaria_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (loading) {
     return <div className="p-8 text-center text-gray-500">Cargando dashboard...</div>;
   }
@@ -77,6 +110,24 @@ export function AdminDashboard() {
           <p className="text-gray-500 text-sm mt-1">Resumen de actividad para hoy, {format(new Date(), "d 'de' MMMM, yyyy", { locale: es })}</p>
         </div>
         <div className="flex items-center gap-2">
+            <button
+                onClick={exportDailyCsv}
+                disabled={todaysAttendance.length === 0}
+                className="px-3 py-2 bg-white text-gray-600 hover:text-indigo-600 rounded-lg border border-gray-200 shadow-sm transition-colors disabled:opacity-50 flex items-center gap-2 text-sm font-medium"
+                title="Exportar CSV del día"
+            >
+                <Download size={18} />
+                Exportar
+            </button>
+            <button
+                onClick={() => setShowDailyMap(true)}
+                disabled={todaysAttendance.length === 0}
+                className="px-3 py-2 bg-white text-gray-600 hover:text-indigo-600 rounded-lg border border-gray-200 shadow-sm transition-colors disabled:opacity-50 flex items-center gap-2 text-sm font-medium"
+                title="Mapa diario"
+            >
+                <MapPin size={18} />
+                Mapa
+            </button>
             <button 
                 onClick={loadDashboardData} 
                 disabled={loading}
@@ -199,6 +250,39 @@ export function AdminDashboard() {
             </>
         )}
       </div>
+
+      {showDailyMap && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Mapa diario</h3>
+                <p className="text-sm text-gray-500">{format(new Date(), "d 'de' MMMM, yyyy", { locale: es })}</p>
+              </div>
+              <button
+                onClick={() => setShowDailyMap(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-500 hover:text-gray-700"
+                aria-label="Cerrar"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-4 bg-gray-50">
+              <Suspense fallback={<div className="h-[440px] w-full flex items-center justify-center bg-gray-100 rounded-lg">Cargando mapa...</div>}>
+                <DailyAttendanceMap records={todaysAttendance} />
+              </Suspense>
+            </div>
+            <div className="p-4 border-t border-gray-100 flex justify-end">
+              <button
+                onClick={() => setShowDailyMap(false)}
+                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

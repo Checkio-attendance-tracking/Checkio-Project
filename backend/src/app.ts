@@ -6,6 +6,7 @@ import employeeRoutes from "./routes/employee.routes";
 import attendanceRoutes from "./routes/attendance.routes";
 import companyRoutes from "./routes/company.routes";
 import superAdminRoutes from "./routes/superadmin.routes";
+import { prisma } from "./config/database";
 
 const app = express();
 
@@ -21,6 +22,25 @@ app.use("/empresa", companyRoutes);
 
 app.get("/time", (req, res) => {
   res.json({ time: new Date().toISOString() });
+});
+
+app.get("/health", async (req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({ status: "ok", db: "ok", time: new Date().toISOString() });
+  } catch {
+    res.status(503).json({ status: "degraded", db: "down", time: new Date().toISOString() });
+  }
+});
+
+app.use((err: unknown, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (res.headersSent) {
+    next(err);
+    return;
+  }
+  const e = err as { message?: string; stack?: string };
+  console.error({ message: e?.message, stack: e?.stack });
+  res.status(500).json({ message: "Internal server error" });
 });
 
 export default app;

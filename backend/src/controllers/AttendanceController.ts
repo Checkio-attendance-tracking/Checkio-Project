@@ -4,6 +4,35 @@ import { markAttendanceSchema, createAttendanceSchema, updateAttendanceSchema } 
 
 const attendanceService = new AttendanceService();
 
+function parseDevice(userAgent?: string): { device?: string; os?: string } {
+  if (!userAgent) return {};
+
+  const ua = userAgent.toLowerCase();
+
+  const device =
+    /mobi|android|iphone|ipad|ipod/.test(ua) ? "mobile" :
+    /windows|macintosh|linux|cros/.test(ua) ? "desktop" :
+    "unknown";
+
+  const os =
+    /windows nt/.test(ua) ? "Windows" :
+    /android/.test(ua) ? "Android" :
+    /iphone|ipad|ipod/.test(ua) ? "iOS" :
+    /mac os x|macintosh/.test(ua) ? "macOS" :
+    /cros/.test(ua) ? "ChromeOS" :
+    /linux/.test(ua) ? "Linux" :
+    "Unknown";
+
+  return { device, os };
+}
+
+function getClientIp(req: Request): string | undefined {
+  const xfwd = req.headers["x-forwarded-for"];
+  const raw = Array.isArray(xfwd) ? xfwd[0] : xfwd;
+  const first = typeof raw === "string" ? raw.split(",")[0]?.trim() : undefined;
+  return first || req.ip || req.socket.remoteAddress || undefined;
+}
+
 export class AttendanceController {
   async mark(req: Request, res: Response) {
     try {
@@ -19,7 +48,12 @@ export class AttendanceController {
         req.user!.companyId as string,
         employeeId,
         type,
-        location
+        location,
+        {
+          userAgent: req.get("user-agent") || undefined,
+          ipAddress: getClientIp(req),
+          ...parseDevice(req.get("user-agent") || undefined)
+        }
       );
       res.json(result);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -82,15 +82,31 @@ type BackendAttendanceRecord = {
   checkIn?: string | null;
   latCheckIn?: number | null;
   lngCheckIn?: number | null;
+  ipCheckIn?: string | null;
+  userAgentCheckIn?: string | null;
+  deviceCheckIn?: string | null;
+  osCheckIn?: string | null;
   lunchStart?: string | null;
   latLunchStart?: number | null;
   lngLunchStart?: number | null;
+  ipLunchStart?: string | null;
+  userAgentLunchStart?: string | null;
+  deviceLunchStart?: string | null;
+  osLunchStart?: string | null;
   lunchEnd?: string | null;
   latLunchEnd?: number | null;
   lngLunchEnd?: number | null;
+  ipLunchEnd?: string | null;
+  userAgentLunchEnd?: string | null;
+  deviceLunchEnd?: string | null;
+  osLunchEnd?: string | null;
   checkOut?: string | null;
   latCheckOut?: number | null;
   lngCheckOut?: number | null;
+  ipCheckOut?: string | null;
+  userAgentCheckOut?: string | null;
+  deviceCheckOut?: string | null;
+  osCheckOut?: string | null;
   status?: AttendanceRecord['status'] | null;
 };
 
@@ -120,18 +136,42 @@ function mapBackendAttendanceToFrontend(record: unknown): AttendanceRecord {
     checkIn: formatPeruTimeFromIso(r.checkIn),
     latCheckIn: r.latCheckIn ?? undefined,
     lngCheckIn: r.lngCheckIn ?? undefined,
+    checkInMeta: r.checkIn ? {
+      ipAddress: r.ipCheckIn ?? undefined,
+      userAgent: r.userAgentCheckIn ?? undefined,
+      device: r.deviceCheckIn ?? undefined,
+      os: r.osCheckIn ?? undefined
+    } : undefined,
     
     lunchStart: formatPeruTimeFromIso(r.lunchStart),
     latLunchStart: r.latLunchStart ?? undefined,
     lngLunchStart: r.lngLunchStart ?? undefined,
+    lunchStartMeta: r.lunchStart ? {
+      ipAddress: r.ipLunchStart ?? undefined,
+      userAgent: r.userAgentLunchStart ?? undefined,
+      device: r.deviceLunchStart ?? undefined,
+      os: r.osLunchStart ?? undefined
+    } : undefined,
     
     lunchEnd: formatPeruTimeFromIso(r.lunchEnd),
     latLunchEnd: r.latLunchEnd ?? undefined,
     lngLunchEnd: r.lngLunchEnd ?? undefined,
+    lunchEndMeta: r.lunchEnd ? {
+      ipAddress: r.ipLunchEnd ?? undefined,
+      userAgent: r.userAgentLunchEnd ?? undefined,
+      device: r.deviceLunchEnd ?? undefined,
+      os: r.osLunchEnd ?? undefined
+    } : undefined,
     
     checkOut: formatPeruTimeFromIso(r.checkOut),
     latCheckOut: r.latCheckOut ?? undefined,
     lngCheckOut: r.lngCheckOut ?? undefined,
+    checkOutMeta: r.checkOut ? {
+      ipAddress: r.ipCheckOut ?? undefined,
+      userAgent: r.userAgentCheckOut ?? undefined,
+      device: r.deviceCheckOut ?? undefined,
+      os: r.osCheckOut ?? undefined
+    } : undefined,
     
     status: r.status || (r.checkIn ? 'present' : 'absent')
   };

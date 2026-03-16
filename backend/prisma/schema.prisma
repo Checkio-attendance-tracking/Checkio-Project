@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -60,7 +60,7 @@ model Employee {
   birthDate    DateTime?
   businessName String?      // Razón Social
   workplace    String?      // Lugar de Trabajo
-  workSchedule Json?
+  workSchedule String?
   status       String       @default("active") // active, inactive
   joinDate     DateTime
   user         User?
@@ -81,22 +81,40 @@ model Attendance {
   checkIn           DateTime?
   latCheckIn        Float?
   lngCheckIn        Float?
+  ipCheckIn         String?
+  userAgentCheckIn  String?
+  deviceCheckIn     String?
+  osCheckIn         String?
 
   lunchStart        DateTime?
   latLunchStart     Float?
   lngLunchStart     Float?
+  ipLunchStart         String?
+  userAgentLunchStart  String?
+  deviceLunchStart     String?
+  osLunchStart         String?
 
   lunchEnd          DateTime?
   latLunchEnd       Float?
   lngLunchEnd       Float?
+  ipLunchEnd         String?
+  userAgentLunchEnd  String?
+  deviceLunchEnd     String?
+  osLunchEnd         String?
 
   checkOut          DateTime?
   latCheckOut       Float?
   lngCheckOut       Float?
+  ipCheckOut         String?
+  userAgentCheckOut  String?
+  deviceCheckOut     String?
+  osCheckOut         String?
 
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
   @@unique([employeeId, date])
+  @@index([companyId, date])
+  @@index([companyId, employeeId, date])
   @@map("attendances")
 }

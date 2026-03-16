@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, ArrowLeft, Calendar, Download, MapPin, X, Pencil, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowLeft, Calendar, MapPin, X, Pencil, Trash2 } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, getDay, parseISO, isSameDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { employeeService } from '../../services/employee';
@@ -82,12 +82,21 @@ export function EmployeeHistory() {
   const handleNextMonth = () => setCurrentMonth(prev => addMonths(prev, 1));
 
   const handleExport = () => {
-    if (records.length === 0) return;
+    const monthRecords = records.filter(r => {
+      const recordDate = parseISO(r.date);
+      return (
+        recordDate.getMonth() === currentMonth.getMonth() &&
+        recordDate.getFullYear() === currentMonth.getFullYear()
+      );
+    });
+
+    if (monthRecords.length === 0) return;
     
+    const escapeCsv = (value: unknown) => `"${String(value ?? '').replaceAll('"', '""')}"`;
     const headers = ['Fecha', 'Estado', 'Ingreso', 'Inicio Almuerzo', 'Fin Almuerzo', 'Salida', 'Horas Trabajadas'];
     const csvContent = [
-      headers.join(','),
-      ...records.map(r => [
+      headers.map(escapeCsv).join(','),
+      ...monthRecords.map(r => ([
         r.date,
         r.status,
         r.checkIn || '',
@@ -95,17 +104,40 @@ export function EmployeeHistory() {
         r.lunchEnd || '',
         r.checkOut || '',
         calculateHoursWorked(r)
-      ].join(','))
+      ]).map(escapeCsv).join(','))
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `asistencia_${employee?.firstName || 'emp'}_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    link.setAttribute('download', `asistencia_${employee?.firstName || 'emp'}_${format(currentMonth, 'yyyy-MM')}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const formatUserAgent = (ua?: string) => {
+    if (!ua) return '-';
+    const trimmed = ua.trim();
+    if (trimmed.length <= 80) return trimmed;
+    return `${trimmed.slice(0, 77)}...`;
+  };
+
+  const getMarkMetaRows = (record: AttendanceRecord) => ([
+    { label: 'Ingreso', time: record.checkIn, meta: record.checkInMeta },
+    { label: 'Inicio Almuerzo', time: record.lunchStart, meta: record.lunchStartMeta },
+    { label: 'Fin Almuerzo', time: record.lunchEnd, meta: record.lunchEndMeta },
+    { label: 'Salida', time: record.checkOut, meta: record.checkOutMeta },
+  ]).filter(r => Boolean(r.time));
+
+  const getDeviceChangeLabel = (record: AttendanceRecord) => {
+    const metas = getMarkMetaRows(record).map(r => r.meta).filter(Boolean);
+    const devices = Array.from(new Set(metas.map(m => m?.device).filter(Boolean))) as string[];
+    const osList = Array.from(new Set(metas.map(m => m?.os).filter(Boolean))) as string[];
+    if (devices.length > 1 || osList.length > 1) return 'Cambio detectado';
+    if (devices.length === 1 || osList.length === 1) return 'Sin cambios';
+    return 'Sin datos';
   };
 
   const handleUpdateRecord = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -270,16 +302,6 @@ export function EmployeeHistory() {
               {employee.firstName} {employee.lastName} - {employee.department}
             </p>
           </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-            <button 
-                onClick={handleExport}
-                className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-                <Download size={16} />
-                Exportar
-            </button>
         </div>
       </div>
 
@@ -521,10 +543,11 @@ export function EmployeeHistory() {
             <div className="bg-indigo-50 p-6 rounded-xl border border-indigo-100">
                 <h3 className="font-semibold text-indigo-900 mb-2">Reporte Detallado</h3>
                 <p className="text-sm text-indigo-700 mb-4">
-                    Descarga el reporte completo de asistencias de este mes en formato PDF o Excel.
+                    Descarga el reporte completo de asistencias de este mes en formato CSV.
                 </p>
                 <button 
                     onClick={handleExport}
+                    disabled={currentMonthRecords.length === 0}
                     className="w-full py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm"
                 >
                     Descargar Reporte CSV
@@ -553,6 +576,42 @@ export function EmployeeHistory() {
                     <Suspense fallback={<div className="h-[400px] w-full flex items-center justify-center bg-gray-100 rounded-lg">Cargando mapa...</div>}>
                         <AttendanceMap record={selectedRecord} />
                     </Suspense>
+                </div>
+                <div className="p-4 border-t border-gray-100 bg-white">
+                    <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-semibold text-gray-900">Dispositivo / IP por marcación</h4>
+                        <span className="text-xs font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-700">
+                            {getDeviceChangeLabel(selectedRecord)}
+                        </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {getMarkMetaRows(selectedRecord).map((row) => (
+                            <div key={row.label} className="border border-gray-200 rounded-lg p-3">
+                                <div className="flex items-center justify-between">
+                                    <div className="text-sm font-semibold text-gray-900">{row.label}</div>
+                                    <div className="text-sm font-mono text-gray-700">{row.time}</div>
+                                </div>
+                                <div className="mt-2 text-xs text-gray-600 space-y-1">
+                                    <div className="flex justify-between gap-3">
+                                        <span className="text-gray-500">Dispositivo</span>
+                                        <span className="font-medium text-gray-800">{row.meta?.device || '-'}</span>
+                                    </div>
+                                    <div className="flex justify-between gap-3">
+                                        <span className="text-gray-500">Sistema</span>
+                                        <span className="font-medium text-gray-800">{row.meta?.os || '-'}</span>
+                                    </div>
+                                    <div className="flex justify-between gap-3">
+                                        <span className="text-gray-500">IP</span>
+                                        <span className="font-medium text-gray-800">{row.meta?.ipAddress || '-'}</span>
+                                    </div>
+                                    <div className="pt-1">
+                                        <div className="text-gray-500">User-Agent</div>
+                                        <div className="text-gray-800 break-words">{formatUserAgent(row.meta?.userAgent)}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
                 <div className="p-4 border-t border-gray-100 flex justify-end">
                     <button 

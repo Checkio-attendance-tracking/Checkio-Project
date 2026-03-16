@@ -1,5 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { verifyToken, TokenPayload } from "../utils/jwt";
+import { CompanyRepository } from "../repositories/CompanyRepository";
+
+const companyRepo = new CompanyRepository();
 
 /* eslint-disable @typescript-eslint/no-namespace */
 declare global {
@@ -31,9 +34,23 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
   next();
 };
 
-export const tenantMiddleware = (req: Request, res: Response, next: NextFunction) => {
+export const tenantMiddleware = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.user || !req.user.companyId) {
     res.status(403).json({ message: "Tenant context missing" });
+    return;
+  }
+  try {
+    const company = await companyRepo.findById(req.user.companyId);
+    if (!company) {
+      res.status(403).json({ message: "Company not found" });
+      return;
+    }
+    if (company.status !== "active") {
+      res.status(403).json({ message: "Company is not active" });
+      return;
+    }
+  } catch {
+    res.status(500).json({ message: "Failed to validate company status" });
     return;
   }
   next();

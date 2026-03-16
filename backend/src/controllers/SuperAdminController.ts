@@ -202,4 +202,214 @@ export class SuperAdminController {
       res.status(500).json({ message: "Error creating user" });
     }
   }
+
+  async listCompanyUsers(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+
+      const users = await prisma.user.findMany({
+        where: {
+          companyId: id as string,
+          role: "admin",
+        },
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          createdAt: true,
+        },
+      });
+
+      res.json(users);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Error fetching company users" });
+    }
+  }
+
+  async resetCompanyUserPassword(req: Request, res: Response) {
+    try {
+      const { id, userId } = req.params;
+      const { password } = req.body;
+
+      if (!password || typeof password !== "string" || password.length < 8) {
+        res.status(400).json({ message: "Password must be at least 8 characters" });
+        return;
+      }
+
+      const user = await prisma.user.findFirst({
+        where: {
+          id: userId as string,
+          companyId: id as string,
+          role: "admin",
+        },
+        select: { id: true, email: true },
+      });
+
+      if (!user) {
+        res.status(404).json({ message: "User not found" });
+        return;
+      }
+
+      const passwordHash = await hashPassword(password);
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { passwordHash },
+      });
+
+      res.json({ id: user.id, email: user.email });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Error resetting password" });
+    }
+  }
+
+  async importEmployees(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const companyId = id as string;
+
+      const payload = req.body as {
+        employees?: Array<{
+          email?: string;
+          firstName?: string;
+          lastName?: string;
+          department?: string;
+          joinDate?: string;
+          birthDate?: string;
+          businessName?: string;
+          workplace?: string;
+          password?: string;
+          workSchedule?: unknown;
+        }>;
+      };
+
+      const employees = Array.isArray(payload.employees) ? payload.employees : [];
+      if (employees.length === 0) {
+        res.status(400).json({ message: "No employees provided" });
+        return;
+      }
+
+      const company = await prisma.company.findUnique({
+        where: { id: companyId },
+        include: { _count: { select: { employees: true } } },
+      });
+      if (!company) {
+        res.status(404).json({ message: "Company not found" });
+        return;
+      }
+
+      const remaining = Math.max(0, company.maxEmployees - company._count.employees);
+
+      const created: Array<{ employeeId: string; email: string }> = [];
+      const skipped: Array<{ index: number; email?: string; reason: string }> = [];
+
+      for (let i = 0; i < employees.length; i++) {
+        if (created.length >= remaining) {
+          skipped.push({ index: i, email: employees[i]?.email, reason: `Employee limit reached (${company.maxEmployees})` });
+          continue;
+        }
+
+        const e = employees[i] || {};
+        const email = typeof e.email === "string" ? e.email.trim().toLowerCase() : "";
+        const firstName = typeof e.firstName === "string" ? e.firstName.trim() : "";
+        const lastName = typeof e.lastName === "string" ? e.lastName.trim() : "";
+        const department = typeof e.department === "string" ? e.department.trim() : "";
+        const joinDateStr = typeof e.joinDate === "string" ? e.joinDate.trim() : "";
+
+        if (!email || !firstName || !lastName || !department || !joinDateStr) {
+          skipped.push({ index: i, email: e.email, reason: "Missing required fields" });
+          continue;
+        }
+
+        const joinDate = new Date(joinDateStr);
+        if (Number.isNaN(joinDate.getTime())) {
+          skipped.push({ index: i, email, reason: "Invalid joinDate" });
+          continue;
+        }
+
+        const birthDate =
+          typeof e.birthDate === "string" && e.birthDate.trim()
+            ? new Date(e.birthDate.trim())
+            : undefined;
+        if (birthDate && Number.isNaN(birthDate.getTime())) {
+          skipped.push({ index: i, email, reason: "Invalid birthDate" });
+          continue;
+        }
+
+        const existingEmployee = await prisma.employee.findUnique({ where: { email } });
+        if (existingEmployee) {
+          skipped.push({ index: i, email, reason: "Employee email already exists" });
+          continue;
+        }
+
+        const existingUser = await prisma.user.findUnique({ where: { email } });
+        if (existingUser) {
+          skipped.push({ index: i, email, reason: "User email already exists" });
+          continue;
+        }
+
+        const workSchedule =
+          typeof e.workSchedule === "string"
+            ? e.workSchedule
+            : e.workSchedule
+              ? JSON.stringify(e.workSchedule)
+              : undefined;
+
+        const password = typeof e.password === "string" ? e.password : undefined;
+        if (password && password.length < 6) {
+          skipped.push({ index: i, email, reason: "Password must be at least 6 characters" });
+          continue;
+        }
+
+        const employee = await prisma.employee.create({
+          data: {
+            companyId,
+            email,
+            firstName,
+            lastName,
+            department,
+            joinDate,
+            birthDate,
+            businessName: typeof e.businessName === "string" ? e.businessName : undefined,
+            workplace: typeof e.workplace === "string" ? e.workplace : undefined,
+            workSchedule,
+            status: "active",
+          },
+        });
+
+        if (password) {
+          const passwordHash = await hashPassword(password);
+          await prisma.user.create({
+            data: {
+              companyId,
+              name: `${employee.firstName} ${employee.lastName}`,
+              email,
+              passwordHash,
+              role: "employee",
+              employeeId: employee.id,
+            },
+          });
+        }
+
+        created.push({ employeeId: employee.id, email });
+      }
+
+      res.json({
+        companyId,
+        createdCount: created.length,
+        skippedCount: skipped.length,
+        created,
+        skipped,
+      });
+    } catch (error: any) {
+      console.error(error);
+      if (error?.code === "P2002") {
+        res.status(400).json({ message: "Duplicate key" });
+        return;
+      }
+      res.status(500).json({ message: "Error importing employees" });
+    }
+  }
 }

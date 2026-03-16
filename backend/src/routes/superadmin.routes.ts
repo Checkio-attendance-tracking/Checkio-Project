@@ -20,5 +20,8 @@ router.get("/empresas/:id", superAdminController.getCompany.bind(superAdminContr
 router.post("/empresas", superAdminController.createCompany.bind(superAdminController));
 router.put("/empresas/:id", superAdminController.updateCompany.bind(superAdminController));
 router.post("/empresas/:id/crear-rrhh", superAdminController.createCompanyUser.bind(superAdminController));
+router.get("/empresas/:id/usuarios", superAdminController.listCompanyUsers.bind(superAdminController));
+router.post("/empresas/:id/usuarios/:userId/reset-password", superAdminController.resetCompanyUserPassword.bind(superAdminController));
+router.post("/empresas/:id/import-empleados", superAdminController.importEmployees.bind(superAdminController));
 
 export default router;

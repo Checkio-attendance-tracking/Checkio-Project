@@ -16,6 +16,15 @@ export class AuthService {
       throw new Error("Invalid credentials");
     }
 
+    if (user.role !== "superadmin") {
+      if (!user.companyId || !user.company) {
+        throw new Error("Company not found");
+      }
+      if (user.company.status !== "active") {
+        throw new Error("Company is not active");
+      }
+    }
+
     const token = generateToken({
       userId: user.id,
       companyId: user.companyId,

@@ -1,3 +1,10 @@
+export type AttendanceMarkMeta = {
+  ipAddress?: string;
+  userAgent?: string;
+  device?: string;
+  os?: string;
+};
+
 export interface AttendanceRecord {
   id: string;
   employeeId: string;
@@ -5,15 +12,19 @@ export interface AttendanceRecord {
   checkIn?: string; // HH:mm
   latCheckIn?: number;
   lngCheckIn?: number;
+  checkInMeta?: AttendanceMarkMeta;
   lunchStart?: string; // HH:mm
   latLunchStart?: number;
   lngLunchStart?: number;
+  lunchStartMeta?: AttendanceMarkMeta;
   lunchEnd?: string; // HH:mm
   latLunchEnd?: number;
   lngLunchEnd?: number;
+  lunchEndMeta?: AttendanceMarkMeta;
   checkOut?: string; // HH:mm
   latCheckOut?: number;
   lngCheckOut?: number;
+  checkOutMeta?: AttendanceMarkMeta;
   status: 'present' | 'absent' | 'late' | 'vacation' | 'weekend' | 'dayOff' | 'pending';
 }
 

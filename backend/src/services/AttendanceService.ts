@@ -77,7 +77,16 @@ function getDayKeyFromUtcDate(date: Date): WorkDayKey {
 }
 
 function getSchedule(raw: unknown): WorkSchedule | undefined {
-  if (!raw || typeof raw !== 'object') return undefined;
+  if (!raw) return undefined;
+  if (typeof raw === 'string') {
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      return getSchedule(parsed);
+    } catch {
+      return undefined;
+    }
+  }
+  if (typeof raw !== 'object') return undefined;
   const schedule = raw as WorkSchedule;
   if (!schedule.days || typeof schedule.days !== 'object') return undefined;
   return schedule;
@@ -141,7 +150,8 @@ export class AttendanceService {
     companyId: string, 
     employeeId: string, 
     type: 'checkIn' | 'lunchStart' | 'lunchEnd' | 'checkOut',
-    location?: { lat: number, lng: number }
+    location?: { lat: number, lng: number },
+    meta?: { userAgent?: string; device?: string; os?: string; ipAddress?: string }
   ) {
     const today = new Date();
     
@@ -190,7 +200,11 @@ export class AttendanceService {
         date: start,
         checkIn: today,
         latCheckIn: location?.lat,
-        lngCheckIn: location?.lng
+        lngCheckIn: location?.lng,
+        ipCheckIn: meta?.ipAddress,
+        userAgentCheckIn: meta?.userAgent,
+        deviceCheckIn: meta?.device,
+        osCheckIn: meta?.os
       });
       return withStatus(created, employee.workSchedule);
     }
@@ -209,7 +223,11 @@ export class AttendanceService {
       const updated = await attendanceRepo.update(record.id, { 
         lunchStart: today,
         latLunchStart: location?.lat,
-        lngLunchStart: location?.lng
+        lngLunchStart: location?.lng,
+        ipLunchStart: meta?.ipAddress,
+        userAgentLunchStart: meta?.userAgent,
+        deviceLunchStart: meta?.device,
+        osLunchStart: meta?.os
       }, companyId);
       return withStatus(updated, employee.workSchedule);
     }
@@ -222,7 +240,11 @@ export class AttendanceService {
       const updated = await attendanceRepo.update(record.id, { 
         lunchEnd: today,
         latLunchEnd: location?.lat,
-        lngLunchEnd: location?.lng
+        lngLunchEnd: location?.lng,
+        ipLunchEnd: meta?.ipAddress,
+        userAgentLunchEnd: meta?.userAgent,
+        deviceLunchEnd: meta?.device,
+        osLunchEnd: meta?.os
       }, companyId);
       return withStatus(updated, employee.workSchedule);
     }
@@ -235,7 +257,11 @@ export class AttendanceService {
       const updated = await attendanceRepo.update(record.id, { 
         checkOut: today,
         latCheckOut: location?.lat,
-        lngCheckOut: location?.lng
+        lngCheckOut: location?.lng,
+        ipCheckOut: meta?.ipAddress,
+        userAgentCheckOut: meta?.userAgent,
+        deviceCheckOut: meta?.device,
+        osCheckOut: meta?.os
       }, companyId);
       return withStatus(updated, employee.workSchedule);
     }
