@@ -559,7 +559,7 @@ export function EmployeeHistory() {
       {/* Modal de Mapa */}
       {selectedRecord && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl overflow-hidden animate-in fade-in zoom-in duration-200 max-h-[90vh] flex flex-col">
                 <div className="flex items-center justify-between p-4 border-b border-gray-100">
                     <div>
                         <h3 className="text-lg font-bold text-gray-900">Ubicación de Marcaciones</h3>
@@ -572,48 +572,63 @@ export function EmployeeHistory() {
                         <X size={24} />
                     </button>
                 </div>
-                <div className="p-4 bg-gray-50">
-                    <Suspense fallback={<div className="h-[400px] w-full flex items-center justify-center bg-gray-100 rounded-lg">Cargando mapa...</div>}>
-                        <AttendanceMap record={selectedRecord} />
-                    </Suspense>
-                </div>
-                <div className="p-4 border-t border-gray-100 bg-white">
-                    <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-semibold text-gray-900">Dispositivo / IP por marcación</h4>
-                        <span className="text-xs font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-700">
-                            {getDeviceChangeLabel(selectedRecord)}
-                        </span>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {getMarkMetaRows(selectedRecord).map((row) => (
-                            <div key={row.label} className="border border-gray-200 rounded-lg p-3">
-                                <div className="flex items-center justify-between">
-                                    <div className="text-sm font-semibold text-gray-900">{row.label}</div>
-                                    <div className="text-sm font-mono text-gray-700">{row.time}</div>
-                                </div>
-                                <div className="mt-2 text-xs text-gray-600 space-y-1">
-                                    <div className="flex justify-between gap-3">
-                                        <span className="text-gray-500">Dispositivo</span>
-                                        <span className="font-medium text-gray-800">{row.meta?.device || '-'}</span>
-                                    </div>
-                                    <div className="flex justify-between gap-3">
-                                        <span className="text-gray-500">Sistema</span>
-                                        <span className="font-medium text-gray-800">{row.meta?.os || '-'}</span>
-                                    </div>
-                                    <div className="flex justify-between gap-3">
-                                        <span className="text-gray-500">IP</span>
-                                        <span className="font-medium text-gray-800">{row.meta?.ipAddress || '-'}</span>
-                                    </div>
-                                    <div className="pt-1">
-                                        <div className="text-gray-500">User-Agent</div>
-                                        <div className="text-gray-800 break-words">{formatUserAgent(row.meta?.userAgent)}</div>
-                                    </div>
-                                </div>
+                <div className="flex-1 min-h-0 overflow-y-auto bg-gray-50 p-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+                        <div className="lg:col-span-3 bg-white rounded-xl border border-gray-200 shadow-sm p-3">
+                            <div className="text-sm font-semibold text-gray-900 mb-2">Mapa</div>
+                            <Suspense fallback={<div className="h-[280px] sm:h-[340px] lg:h-[420px] w-full flex items-center justify-center bg-gray-100 rounded-lg">Cargando mapa...</div>}>
+                                <AttendanceMap record={selectedRecord} />
+                            </Suspense>
+                        </div>
+
+                        <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm p-3">
+                            <div className="flex items-center justify-between mb-3 gap-3">
+                                <h4 className="font-semibold text-gray-900">Dispositivo / IP</h4>
+                                <span className="text-xs font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-700 shrink-0">
+                                    {getDeviceChangeLabel(selectedRecord)}
+                                </span>
                             </div>
-                        ))}
+
+                            {getMarkMetaRows(selectedRecord).length === 0 ? (
+                                <div className="text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded-lg p-3">
+                                    No hay datos de dispositivo/IP para este registro.
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3">
+                                    {getMarkMetaRows(selectedRecord).map((row) => (
+                                        <div key={row.label} className="border border-gray-200 rounded-lg p-3">
+                                            <div className="flex items-center justify-between gap-3">
+                                                <div className="text-sm font-semibold text-gray-900">{row.label}</div>
+                                                <div className="text-xs font-mono text-gray-700 bg-gray-50 border border-gray-200 rounded px-2 py-0.5">
+                                                    {row.time}
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-2 text-xs text-gray-700 grid grid-cols-2 gap-x-3 gap-y-1">
+                                                <div className="text-gray-500">Dispositivo</div>
+                                                <div className="font-medium text-gray-900 truncate">{row.meta?.device || '-'}</div>
+
+                                                <div className="text-gray-500">Sistema</div>
+                                                <div className="font-medium text-gray-900 truncate">{row.meta?.os || '-'}</div>
+
+                                                <div className="text-gray-500">IP</div>
+                                                <div className="font-medium text-gray-900 truncate">{row.meta?.ipAddress || '-'}</div>
+                                            </div>
+
+                                            <div className="mt-2">
+                                                <div className="text-xs text-gray-500 mb-1">User-Agent</div>
+                                                <div className="text-xs text-gray-800 break-words max-h-16 overflow-auto pr-1">
+                                                    {formatUserAgent(row.meta?.userAgent)}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
-                <div className="p-4 border-t border-gray-100 flex justify-end">
+                <div className="p-4 border-t border-gray-100 flex justify-end bg-white">
                     <button 
                         onClick={() => setSelectedRecord(null)}
                         className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"

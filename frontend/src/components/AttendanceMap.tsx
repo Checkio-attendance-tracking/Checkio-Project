@@ -33,7 +33,7 @@ export function AttendanceMap({ record }: AttendanceMapProps) {
   const centerLng = points.reduce((sum, p) => sum + (p.lng || 0), 0) / points.length;
 
   return (
-    <div className="h-[400px] w-full rounded-lg overflow-hidden border border-gray-200 shadow-inner">
+    <div className="h-[280px] sm:h-[340px] lg:h-[420px] w-full rounded-lg overflow-hidden border border-gray-200 shadow-inner">
       <MapContainer center={[centerLat, centerLng]} zoom={15} style={{ height: '100%', width: '100%' }}>
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
