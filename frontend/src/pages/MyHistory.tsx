@@ -80,6 +80,17 @@ export function MyHistory() {
     return typeof message === "string" ? message : undefined;
   };
 
+  const normalizeHHMM = (raw: string): string | null => {
+    const m = raw.trim().match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+    if (!m) return null;
+    const hh = Number(m[1]);
+    const mm = Number(m[2]);
+    if (Number.isNaN(hh) || Number.isNaN(mm)) return null;
+    if (hh < 0 || hh > 23) return null;
+    if (mm < 0 || mm > 59) return null;
+    return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+  };
+
   const handlePrevMonth = () => setCurrentMonth((d) => addMonths(d, -1));
   const handleNextMonth = () => setCurrentMonth((d) => addMonths(d, 1));
 
@@ -166,6 +177,15 @@ export function MyHistory() {
     const reason = correctionReason.trim();
     if (reason.length < 3) return;
     if (!correctionTime) return;
+    const normalizedTime = normalizeHHMM(correctionTime);
+    if (!normalizedTime) {
+      setToast({
+        kind: "error",
+        title: "Hora inválida",
+        message: "Ingresa una hora válida (HH:mm).",
+      });
+      return;
+    }
 
     const targetDate = correctionOpen.record.date;
     const willOverwrite = hasPendingDuplicate(targetDate, correctionMark);
@@ -175,7 +195,7 @@ export function MyHistory() {
       await workScheduleChangeService.create({
         date: targetDate,
         markType: correctionMark,
-        requestedTime: correctionTime,
+        requestedTime: normalizedTime,
         reason,
       });
       closeCorrection();
