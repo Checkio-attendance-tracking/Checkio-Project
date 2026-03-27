@@ -66,6 +66,20 @@ export function MyHistory() {
     return () => window.clearTimeout(t);
   }, [toast]);
 
+  const extractApiMessage = (error: unknown): string | undefined => {
+    if (typeof error !== "object" || !error) return undefined;
+    if (!("response" in error)) return undefined;
+    const response = (error as { response?: unknown }).response;
+    if (typeof response !== "object" || !response) return undefined;
+    if (!("data" in response)) return undefined;
+    const data = (response as { data?: unknown }).data;
+    if (typeof data === "string") return data;
+    if (typeof data !== "object" || !data) return undefined;
+    if (!("message" in data)) return undefined;
+    const message = (data as { message?: unknown }).message;
+    return typeof message === "string" ? message : undefined;
+  };
+
   const handlePrevMonth = () => setCurrentMonth((d) => addMonths(d, -1));
   const handleNextMonth = () => setCurrentMonth((d) => addMonths(d, 1));
 
@@ -182,10 +196,11 @@ export function MyHistory() {
       );
     } catch (e) {
       console.error(e);
+      const apiMessage = extractApiMessage(e);
       setToast({
         kind: "error",
         title: "No se pudo enviar",
-        message: "Verifica tu conexión e inténtalo nuevamente.",
+        message: apiMessage || "Verifica tu conexión e inténtalo nuevamente.",
       });
     } finally {
       setIsSubmittingCorrection(false);
