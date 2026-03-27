@@ -3,7 +3,7 @@ import { usePeruTime } from '../hooks/usePeruTime';
 import { Clock } from '../components/Clock';
 import { ActionButton } from '../components/ActionButton';
 import { Logo } from '../components/Logo';
-import { LogOut, LogIn, Utensils, Briefcase, User as UserIcon, Settings, MapPin, X, RefreshCw, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { LogOut, LogIn, Utensils, Briefcase, User as UserIcon, Settings, MapPin, X, RefreshCw, AlertTriangle, CheckCircle2, Calendar, Menu, ClipboardList } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { attendanceService } from '../services/attendance';
@@ -20,6 +20,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
   const [isMarking, setIsMarking] = useState(false);
   const [todayRecord, setTodayRecord] = useState<AttendanceRecord | null>(null);
   const [successToast, setSuccessToast] = useState<{ actionLabel: string; at: Date } | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   type LocationHelpKind = 'denied' | 'timeout' | 'unavailable' | 'unsupported' | 'inAppBrowser' | 'required' | 'outside';
   const [locationHelpOpen, setLocationHelpOpen] = useState(false);
   const [locationHelpKind, setLocationHelpKind] = useState<LocationHelpKind>('denied');
@@ -208,7 +209,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
           </div>
           
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-3 bg-gray-100 px-3 py-1.5 rounded-full pr-1">
+            <div className="hidden md:flex items-center space-x-3 bg-gray-100 px-3 py-1.5 rounded-full pr-1">
               <div className="flex items-center space-x-2">
                 <UserIcon size={16} className="text-gray-500" />
                 <span className="text-sm font-medium text-gray-700">{user.firstName}</span>
@@ -223,18 +224,87 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                   <Settings size={14} />
                 </button>
               )}
+              <button 
+                onClick={() => navigate('/dashboard/history')}
+                className="p-1.5 bg-white rounded-full text-gray-400 hover:text-indigo-600 shadow-sm transition-colors"
+                title="Mi historial"
+              >
+                <Calendar size={14} />
+              </button>
             </div>
 
             <button 
               onClick={onLogout}
-              className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+              className="hidden md:inline-flex p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
               title="Cerrar sesión"
             >
               <LogOut size={20} />
             </button>
+
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="md:hidden p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors"
+              title="Menú"
+            >
+              <Menu size={22} />
+            </button>
           </div>
         </div>
       </header>
+
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <button
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setMobileMenuOpen(false)}
+            aria-label="Cerrar menú"
+          />
+          <div className="absolute top-0 right-0 h-full w-72 bg-white shadow-2xl border-l border-gray-100 flex flex-col">
+            <div className="p-4 flex items-center justify-between border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <Logo size={28} />
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-gray-900 truncate">{user.firstName} {user.lastName}</div>
+                  <div className="text-xs text-gray-500 truncate">{user.email}</div>
+                </div>
+              </div>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2 rounded-full text-gray-500 hover:bg-gray-100"
+                aria-label="Cerrar"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-3 space-y-1">
+              <button
+                onClick={() => { setMobileMenuOpen(false); navigate('/dashboard/history'); }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                <Calendar size={18} className="text-indigo-600" />
+                <span className="text-sm font-medium">Historial</span>
+              </button>
+
+              <button
+                onClick={() => { setMobileMenuOpen(false); navigate('/dashboard/history?tab=solicitudes'); }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                <ClipboardList size={18} className="text-indigo-600" />
+                <span className="text-sm font-medium">Solicitudes</span>
+              </button>
+
+              <button
+                onClick={() => { setMobileMenuOpen(false); onLogout(); }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-600 hover:bg-red-50"
+              >
+                <LogOut size={18} />
+                <span className="text-sm font-semibold">Cerrar Sesión</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="flex-1 max-w-7xl mx-auto w-full p-6 flex flex-col items-center">

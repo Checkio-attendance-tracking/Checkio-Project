@@ -44,6 +44,9 @@ export class EmployeeService {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async update(companyId: string, id: string, data: any) {
+    if (data && typeof data === "object") {
+      delete data.workSchedule;
+    }
     return employeeRepo.update(companyId, id, data);
   }
 

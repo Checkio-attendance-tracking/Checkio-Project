@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -29,6 +29,7 @@ model Company {
   users     User[]
   employees Employee[]
   attendances Attendance[]
+  attendanceCorrectionRequests AttendanceCorrectionRequest[]
 
   @@map("companies")
 }
@@ -44,6 +45,7 @@ model User {
   employeeId   String?   @unique
   employee     Employee? @relation(fields: [employeeId], references: [id])
   createdAt    DateTime  @default(now())
+  reviewedAttendanceCorrections AttendanceCorrectionRequest[] @relation("attendanceCorrectionReviewer")
 
   @@map("users")
 }
@@ -65,9 +67,37 @@ model Employee {
   joinDate     DateTime
   user         User?
   attendances  Attendance[]
+  attendanceCorrectionRequests AttendanceCorrectionRequest[]
   createdAt    DateTime     @default(now())
 
   @@map("employees")
+}
+
+model AttendanceCorrectionRequest {
+  id              String   @id @default(uuid())
+  companyId       String
+  company         Company  @relation(fields: [companyId], references: [id])
+  employeeId      String
+  employee        Employee @relation(fields: [employeeId], references: [id])
+  attendanceId    String
+  attendance      Attendance @relation(fields: [attendanceId], references: [id])
+  markType        String
+  requestedTime   String
+  previousTimeAtRequest String
+  previousTimeApplied   String?
+  status          String   @default("pending")
+  reason          String
+  reviewComment   String?
+  reviewedByUserId String?
+  reviewedByUser   User?    @relation("attendanceCorrectionReviewer", fields: [reviewedByUserId], references: [id])
+  reviewedAt      DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([companyId, status, createdAt])
+  @@index([employeeId, createdAt])
+  @@index([attendanceId])
+  @@map("attendance_correction_requests")
 }
 
 model Attendance {
@@ -112,6 +142,7 @@ model Attendance {
 
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
+  correctionRequests AttendanceCorrectionRequest[]
 
   @@unique([employeeId, date])
   @@index([companyId, date])

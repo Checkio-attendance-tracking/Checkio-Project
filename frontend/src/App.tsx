@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
+import { MyHistory } from './pages/MyHistory';
 import { AdminLayout } from './pages/admin/AdminLayout';
 import { EmployeeList } from './pages/admin/EmployeeList';
 import { CreateEmployee } from './pages/admin/CreateEmployee';
 import { EmployeeHistory } from './pages/admin/EmployeeHistory';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { CompanySettingsPage } from './pages/admin/CompanySettings';
+import { WorkScheduleRequestsPage } from './pages/admin/WorkScheduleRequests';
 import { SuperAdminLayout } from './pages/superadmin/SuperAdminLayout';
 import { CompanyList } from './pages/superadmin/CompanyList';
 import { CreateCompany } from './pages/superadmin/CreateCompany';
@@ -71,6 +73,7 @@ function App() {
         <Route path="/" element={!user ? <Login onLogin={setUser} /> : <Navigate to={getHomeRoute(user)} replace />} />
         
         <Route path="/dashboard" element={user && user.role !== 'superadmin' ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/" replace />} />
+        <Route path="/dashboard/history" element={user && user.role !== 'superadmin' ? <MyHistory /> : <Navigate to="/" replace />} />
         
         <Route path="/admin" element={user && user.role === 'admin' ? <AdminLayout onLogout={handleLogout} /> : <Navigate to="/" replace />}>
           <Route index element={<AdminDashboard />} />
@@ -78,6 +81,7 @@ function App() {
           <Route path="employees/new" element={<CreateEmployee />} />
           <Route path="employees/:id/edit" element={<CreateEmployee />} />
           <Route path="employees/:id/history" element={<EmployeeHistory />} />
+          <Route path="correction-requests" element={<WorkScheduleRequestsPage />} />
           <Route path="settings" element={<CompanySettingsPage />} />
         </Route>
 

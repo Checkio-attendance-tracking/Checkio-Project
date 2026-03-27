@@ -70,3 +70,20 @@ export const createAttendanceSchema = z.object({
 });
 
 export const updateAttendanceSchema = createAttendanceSchema.partial().omit({ employeeId: true, date: true });
+
+const dateYYYYMMDD = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format (yyyy-MM-dd)");
+
+export const createAttendanceCorrectionRequestSchema = z.object({
+  date: dateYYYYMMDD,
+  markType: z.enum(["checkIn", "lunchStart", "lunchEnd", "checkOut"]),
+  requestedTime: timeHHMM,
+  reason: z.string().min(3).max(500),
+});
+
+export const listAttendanceCorrectionRequestsSchema = z.object({
+  status: z.enum(["pending", "approved", "rejected"]).optional(),
+});
+
+export const reviewAttendanceCorrectionRequestSchema = z.object({
+  comment: z.string().max(500).optional(),
+});

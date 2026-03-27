@@ -35,6 +35,7 @@ const seed = async () => {
       });
     }
 
+    await tx.attendanceCorrectionRequest.deleteMany({});
     await tx.attendance.deleteMany({});
     await tx.user.deleteMany({ where: { role: { not: "superadmin" } } });
     await tx.employee.deleteMany({});

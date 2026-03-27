@@ -4,6 +4,18 @@ import { generateToken } from "../utils/jwt";
 
 const userRepo = new UserRepository();
 
+function sanitizeUserForClient(user: any) {
+  if (!user) return user;
+  const { passwordHash, ...rest } = user;
+
+  if (rest.employee) {
+    const { documentId, ...employeeRest } = rest.employee;
+    rest.employee = employeeRest;
+  }
+
+  return rest;
+}
+
 export class AuthService {
   async login(email: string, password: string) {
     const user = await userRepo.findByEmail(email);
@@ -32,12 +44,12 @@ export class AuthService {
       employeeId: user.employeeId
     });
 
-    return { token, user };
+    return { token, user: sanitizeUserForClient(user) };
   }
 
   async me(userId: string) {
     const user = await userRepo.findById(userId);
     if (!user) throw new Error("User not found");
-    return user;
+    return sanitizeUserForClient(user);
   }
 }

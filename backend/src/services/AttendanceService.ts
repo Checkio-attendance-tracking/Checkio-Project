@@ -125,8 +125,26 @@ function computeStatus(record: any, scheduleOverride?: unknown): AttendanceStatu
   return actualStart > expectedStart + grace ? 'late' : 'present';
 }
 
+function computeOvertimeMinutes(record: any, scheduleOverride?: unknown): number {
+  const schedule = getSchedule(scheduleOverride) ?? getSchedule(record.employee?.workSchedule);
+  if (!schedule) return 0;
+  const timeZone = schedule.timezone || 'America/Lima';
+  const dayKey = getDayKeyFromUtcDate(new Date(record.date));
+  const day = schedule.days?.[dayKey];
+  if (!day || !day.enabled || !day.end) return 0;
+  if (!record.checkOut) return 0;
+  const expectedEnd = hhmmToMinutes(day.end);
+  let actualEnd = hhmmToMinutes(formatTimeInTimeZone(new Date(record.checkOut), timeZone));
+  if (actualEnd < expectedEnd) actualEnd += 24 * 60;
+  const threshold = expectedEnd + 60; // 1 hour after end
+  const diff = actualEnd - threshold;
+  return diff > 0 ? diff : 0;
+}
+
 function withStatus(record: any, scheduleOverride?: unknown) {
-  return { ...record, status: computeStatus(record, scheduleOverride) };
+  const status = computeStatus(record, scheduleOverride);
+  const overtimeMinutes = computeOvertimeMinutes(record, scheduleOverride);
+  return { ...record, status, overtimeMinutes };
 }
 
 function getDayRangeInTimeZone(now: Date, timeZone: string) {

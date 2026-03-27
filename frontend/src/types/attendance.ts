@@ -25,6 +25,7 @@ export interface AttendanceRecord {
   latCheckOut?: number;
   lngCheckOut?: number;
   checkOutMeta?: AttendanceMarkMeta;
+  overtimeMinutes?: number;
   status: 'present' | 'absent' | 'late' | 'vacation' | 'weekend' | 'dayOff' | 'pending';
 }
 

@@ -108,6 +108,7 @@ type BackendAttendanceRecord = {
   deviceCheckOut?: string | null;
   osCheckOut?: string | null;
   status?: AttendanceRecord['status'] | null;
+  overtimeMinutes?: number | null;
 };
 
 function formatPeruTimeFromIso(isoString?: string | null) {
@@ -173,6 +174,7 @@ function mapBackendAttendanceToFrontend(record: unknown): AttendanceRecord {
       os: r.osCheckOut ?? undefined
     } : undefined,
     
+    overtimeMinutes: r.overtimeMinutes ?? undefined,
     status: r.status || (r.checkIn ? 'present' : 'absent')
   };
 }

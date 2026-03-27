@@ -6,11 +6,22 @@ import employeeRoutes from "./routes/employee.routes";
 import attendanceRoutes from "./routes/attendance.routes";
 import companyRoutes from "./routes/company.routes";
 import superAdminRoutes from "./routes/superadmin.routes";
+import workScheduleChangeRoutes from "./routes/workScheduleChange.routes";
 import { prisma } from "./config/database";
 
 const app = express();
 
-app.use(cors());
+const isProd = process.env.NODE_ENV === "production";
+const corsOrigins = (process.env.CORS_ORIGINS || "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin: !isProd ? true : corsOrigins.length > 0 ? corsOrigins : false,
+  })
+);
 app.use(helmet());
 app.use(express.json());
 
@@ -19,6 +30,7 @@ app.use("/superadmin", superAdminRoutes);
 app.use("/empleados", employeeRoutes);
 app.use("/asistencias", attendanceRoutes);
 app.use("/empresa", companyRoutes);
+app.use("/solicitudes-correccion", workScheduleChangeRoutes);
 
 app.get("/time", (req, res) => {
   res.json({ time: new Date().toISOString() });

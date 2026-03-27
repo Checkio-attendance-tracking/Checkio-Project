@@ -125,6 +125,8 @@ export function CreateEmployee() {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           delete (dataToUpdate as any).password;
         }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        delete (dataToUpdate as any).workSchedule;
         await employeeService.update(id, dataToUpdate);
         alert('Empleado actualizado exitosamente');
       } else {
@@ -339,6 +341,12 @@ export function CreateEmployee() {
               Horario y Días de Trabajo
             </h3>
 
+              {isEditing && (
+                <div className="mb-4 px-4 py-3 bg-yellow-50 border border-yellow-100 text-yellow-800 rounded-lg text-sm">
+                  El horario no se puede modificar libremente. Solo RRHH puede aplicar cambios cuando existe una solicitud aprobada.
+                </div>
+              )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700 block">Zona Horaria</label>
@@ -346,6 +354,7 @@ export function CreateEmployee() {
                   type="text"
                   value={formData.workSchedule.timezone || ''}
                   onChange={(e) => updateSchedule({ timezone: e.target.value })}
+                    disabled={isEditing}
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
                   placeholder="America/Lima"
                 />
@@ -359,6 +368,7 @@ export function CreateEmployee() {
                   max={240}
                   value={formData.workSchedule.graceMinutes ?? 0}
                   onChange={(e) => updateSchedule({ graceMinutes: Number(e.target.value) })}
+                    disabled={isEditing}
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
                 />
               </div>
@@ -385,12 +395,13 @@ export function CreateEmployee() {
                             type="checkbox"
                             checked={d.enabled}
                             onChange={(e) => updateScheduleDay(day, { enabled: e.target.checked })}
+                            disabled={isEditing}
                           />
                         </td>
                         <td className="px-4 py-3">
                           <input
                             type="time"
-                            disabled={!d.enabled}
+                            disabled={isEditing || !d.enabled}
                             value={d.start || ''}
                             onChange={(e) => updateScheduleDay(day, { start: e.target.value })}
                             className="px-2 py-1 border border-gray-200 rounded-md disabled:bg-gray-100"
@@ -399,7 +410,7 @@ export function CreateEmployee() {
                         <td className="px-4 py-3">
                           <input
                             type="time"
-                            disabled={!d.enabled}
+                            disabled={isEditing || !d.enabled}
                             value={d.end || ''}
                             onChange={(e) => updateScheduleDay(day, { end: e.target.value })}
                             className="px-2 py-1 border border-gray-200 rounded-md disabled:bg-gray-100"

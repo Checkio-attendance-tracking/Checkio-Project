@@ -283,6 +283,7 @@ export function EmployeeHistory() {
     present: currentMonthRecords.filter(r => r.status === 'present').length,
     late: currentMonthRecords.filter(r => r.status === 'late').length,
     absent: currentMonthRecords.filter(r => r.status === 'absent').length,
+    overtimeMinutes: currentMonthRecords.reduce((sum, r) => sum + (r.overtimeMinutes || 0), 0)
   };
 
   return (
@@ -396,6 +397,7 @@ export function EmployeeHistory() {
                                             </div>
 
                                             {record && record.status !== 'weekend' && record.status !== 'dayOff' && record.status !== 'absent' ? (
+                                              <>
                                                 <div className="mt-2 grid grid-cols-3 gap-2">
                                                     <div className="bg-gray-50 rounded-lg px-2 py-1.5">
                                                         <div className="text-[10px] text-gray-500">In</div>
@@ -410,6 +412,12 @@ export function EmployeeHistory() {
                                                         <div className="text-xs font-bold text-indigo-700">{calculateHoursWorked(record)}</div>
                                                     </div>
                                                 </div>
+                                                {record && record.overtimeMinutes && record.overtimeMinutes > 0 ? (
+                                                  <div className="mt-2 text-[10px] text-rose-700 bg-rose-50 border border-rose-100 rounded px-2 py-1 inline-block">
+                                                    HE: {Math.floor(record.overtimeMinutes/60)}h
+                                                  </div>
+                                                ) : null}
+                                              </>
                                             ) : null}
                                         </div>
                                     </div>
@@ -492,6 +500,11 @@ export function EmployeeHistory() {
                                               <span className="text-[10px] text-gray-400">Total</span>
                                               <span className="text-[11px] sm:text-xs font-bold text-indigo-600">{calculateHoursWorked(record)}</span>
                                           </div>
+                                          {record && record.overtimeMinutes && record.overtimeMinutes > 0 ? (
+                                            <div className="mt-1 text-[10px] text-rose-700 bg-rose-50 border border-rose-100 rounded px-1.5 py-0.5 inline-block">
+                                              HE: {Math.floor(record.overtimeMinutes/60)}h {record.overtimeMinutes%60}m
+                                            </div>
+                                          ) : null}
                                       </div>
                                   ) : record?.status === 'weekend' ? (
                                       <div className="flex-1 flex items-center justify-center">
@@ -536,6 +549,15 @@ export function EmployeeHistory() {
                             <span className="text-sm font-medium text-gray-700">Faltas</span>
                         </div>
                         <span className="text-lg font-bold text-red-700">{stats.absent}</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-rose-50 rounded-lg">
+                        <div className="flex items-center gap-3">
+                            <div className="w-2 h-2 rounded-full bg-rose-500" />
+                            <span className="text-sm font-medium text-gray-700">Horas Extras</span>
+                        </div>
+                        <span className="text-lg font-bold text-rose-700">
+                          {Math.floor(stats.overtimeMinutes/60)}h
+                        </span>
                     </div>
                 </div>
             </div>
