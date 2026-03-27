@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, Suspense, lazy } from 'react';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, MapPin, X, ArrowLeft, Menu, ClipboardList, LogOut, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, MapPin, Pencil, X, ArrowLeft, Menu, ClipboardList, LogOut, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { addMonths, eachDayOfInterval, endOfMonth, format, isSameDay, startOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -35,6 +35,9 @@ export function MyHistory() {
     if (!isoOrDate) return undefined;
     return isoOrDate.includes("T") ? isoOrDate.split("T")[0] : isoOrDate;
   };
+
+  const canRequestCorrection = (record: AttendanceRecord) =>
+    Boolean(record.checkIn || record.lunchStart || record.lunchEnd || record.checkOut);
 
   const reloadHistory = async (month: Date) => {
     const data = await attendanceService.getMyHistory(month);
@@ -465,6 +468,15 @@ export function MyHistory() {
                             <MapPin size={14} />
                           </button>
                         )}
+                        {canRequestCorrection(record) && (
+                          <button
+                            onClick={() => openCorrection(record)}
+                            className="hidden sm:inline-flex text-gray-400 hover:text-indigo-600 transition-colors"
+                            title="Solicitar corrección"
+                          >
+                            <Pencil size={14} />
+                          </button>
+                        )}
                         <span className={`hidden sm:inline-flex text-[10px] px-1.5 py-0.5 rounded font-medium capitalize ${getStatusColor(record.status)}`}>
                           {record.status === 'present' ? 'Asistió' : record.status === 'late' ? 'Tardanza' : record.status === 'absent' ? 'Falta' : record.status}
                         </span>
@@ -489,12 +501,6 @@ export function MyHistory() {
                           HE: {Math.floor(record.overtimeMinutes/60)}h
                         </div>
                       ) : null}
-                      <button
-                        onClick={() => openCorrection(record)}
-                        className="mt-1 text-[10px] text-indigo-600 hover:text-indigo-700 font-medium text-left"
-                      >
-                        Solicitar corrección
-                      </button>
                     </div>
                   ) : null}
                 </div>

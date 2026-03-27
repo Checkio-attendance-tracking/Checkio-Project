@@ -31,6 +31,7 @@ type WorkDayKey = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
 type WorkSchedule = {
   timezone?: string;
   graceMinutes?: number;
+  overtimeGraceMinutes?: number;
   days: Record<WorkDayKey, { enabled: boolean; start?: string; end?: string }>;
 };
 
@@ -135,8 +136,11 @@ function computeOvertimeMinutes(record: any, scheduleOverride?: unknown): number
   if (!record.checkOut) return 0;
   const expectedEnd = hhmmToMinutes(day.end);
   let actualEnd = hhmmToMinutes(formatTimeInTimeZone(new Date(record.checkOut), timeZone));
-  if (actualEnd < expectedEnd) actualEnd += 24 * 60;
-  const threshold = expectedEnd + 60; // 1 hour after end
+  const expectedStart = day.start ? hhmmToMinutes(day.start) : undefined;
+  const isOvernight = expectedStart !== undefined && expectedEnd < expectedStart;
+  if (isOvernight && actualEnd < expectedEnd) actualEnd += 24 * 60;
+  const grace = schedule.overtimeGraceMinutes ?? 0;
+  const threshold = expectedEnd + grace;
   const diff = actualEnd - threshold;
   return diff > 0 ? diff : 0;
 }
