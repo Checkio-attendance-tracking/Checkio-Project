@@ -11,7 +11,7 @@ services:
       mountPath: /var/data
       sizeGB: 1
     buildCommand: npm ci --include=dev --production=false && npx prisma generate && npm run build
-    startCommand: sh -c 'npx prisma migrate deploy && if [ "$RUN_SEED" = "true" ]; then npm run seed; fi && npm start'
+    startCommand: sh -c 'export DATABASE_URL=file:/var/data/checkio.db && npx prisma migrate deploy && if [ "$RUN_SEED" = "true" ]; then npm run seed; fi && npm start'
     envVars:
       - key: DATABASE_URL
         value: file:/var/data/checkio.db
