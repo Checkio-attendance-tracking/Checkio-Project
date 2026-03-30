@@ -387,9 +387,9 @@ export function EmployeeHistory() {
                           const isToday = isSameDay(day, new Date());
                           
                           return (
-                              <div 
+                          <div 
                                   key={day.toISOString()}
-                                  className={`h-24 sm:h-32 p-1.5 sm:p-2 rounded-lg border flex flex-col justify-between transition-all hover:shadow-md ${
+                                  className={`h-28 sm:h-36 p-1.5 sm:p-2 rounded-lg border flex flex-col justify-between transition-all hover:shadow-md ${
                                       isToday ? 'border-indigo-500 ring-1 ring-indigo-500 bg-white' : 'border-gray-100 bg-white'
                                   }`}
                               >

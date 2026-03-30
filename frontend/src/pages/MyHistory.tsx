@@ -360,10 +360,16 @@ export function MyHistory() {
                         </div>
 
                         {record && record.status !== 'weekend' && record.status !== 'dayOff' && record.status !== 'absent' ? (
-                          <div className="mt-2 grid grid-cols-3 gap-2">
+                          <div className="mt-2 grid grid-cols-2 gap-2">
                             <div className="bg-gray-50 rounded-lg px-2 py-1.5">
                               <div className="text-[10px] text-gray-500">In</div>
                               <div className="text-xs font-semibold text-gray-800">{record.checkIn || '--:--'}</div>
+                            </div>
+                            <div className="bg-gray-50 rounded-lg px-2 py-1.5">
+                              <div className="text-[10px] text-gray-500">Alm</div>
+                              <div className="text-xs font-semibold text-gray-800">
+                                {record.lunchStart ? `${record.lunchStart}-${record.lunchEnd || '??:??'}` : '--:--'}
+                              </div>
                             </div>
                             <div className="bg-gray-50 rounded-lg px-2 py-1.5">
                               <div className="text-[10px] text-gray-500">Out</div>
@@ -374,7 +380,7 @@ export function MyHistory() {
                               <div className="text-xs font-bold text-indigo-700">{calculateHoursWorked(record)}</div>
                             </div>
                             {record.overtimeMinutes && record.overtimeMinutes > 0 ? (
-                              <div className="col-span-3 mt-1 text-[10px] text-rose-700 bg-rose-50 border border-rose-100 rounded px-1.5 py-0.5 inline-block w-max">
+                              <div className="col-span-2 mt-1 text-[10px] text-rose-700 bg-rose-50 border border-rose-100 rounded px-1.5 py-0.5 inline-block w-max">
                                 HE: {Math.floor(record.overtimeMinutes/60)}h {record.overtimeMinutes%60}m
                               </div>
                             ) : null}
@@ -688,7 +694,7 @@ export function MyHistory() {
             <div className="flex items-center justify-between p-4 border-b border-gray-100">
               <div>
                 <h3 className="text-lg font-bold text-gray-900">Solicitar corrección</h3>
-                <p className="text-sm text-gray-500">{format(new Date(correctionOpen.record.date), "EEEE d 'de' MMMM, yyyy", { locale: es })}</p>
+                <p className="text-sm text-gray-500">{format(parseDateForDisplay(correctionOpen.record.date), "EEEE d 'de' MMMM, yyyy", { locale: es })}</p>
               </div>
               <button onClick={closeCorrection} disabled={isSubmittingCorrection} className="p-2 hover:bg-gray-100 rounded-full text-gray-500">
                 <X size={20} />
