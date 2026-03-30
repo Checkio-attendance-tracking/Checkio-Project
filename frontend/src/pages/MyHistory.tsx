@@ -39,7 +39,7 @@ export function MyHistory() {
       return null;
     }
   }, []);
-  const isAdmin = currentUser?.role === 'admin';
+  const [isAdmin, setIsAdmin] = useState<boolean>(currentUser?.role === 'admin');
 
   const normalizeDate = (isoOrDate?: string | null) => {
     if (!isoOrDate) return undefined;
@@ -68,6 +68,12 @@ export function MyHistory() {
     if (activeTab !== 'historial') return;
     reloadHistory(currentMonth);
   }, [currentMonth, activeTab]);
+
+  useEffect(() => {
+    if (!currentUser || !currentUser.role) {
+      authService.me().then((u) => setIsAdmin(u.role === 'admin')).catch(() => {});
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     void reloadMyRequests(activeTab === 'solicitudes');
@@ -123,13 +129,13 @@ export function MyHistory() {
     try {
       const start = parseTime(record.checkIn);
       let end = parseTime(record.checkOut);
-      if (end < start) end += 24 * 60;
+      if (end < start) return '-';
       let lunch = 0;
       if (record.lunchStart && record.lunchEnd) {
         let ls = parseTime(record.lunchStart);
         let le = parseTime(record.lunchEnd);
-        if (ls < start) ls += 24 * 60;
-        if (le < ls) le += 24 * 60;
+        if (ls < start) return '-';
+        if (le < ls) return '-';
         const s = Math.max(start, ls);
         const e = Math.min(end, le);
         lunch = Math.max(0, e - s);
@@ -369,7 +375,7 @@ export function MyHistory() {
                             </div>
                             {record.overtimeMinutes && record.overtimeMinutes > 0 ? (
                               <div className="col-span-3 mt-1 text-[10px] text-rose-700 bg-rose-50 border border-rose-100 rounded px-1.5 py-0.5 inline-block w-max">
-                                HE: {Math.floor(record.overtimeMinutes/60)}h
+                                HE: {Math.floor(record.overtimeMinutes/60)}h {record.overtimeMinutes%60}m
                               </div>
                             ) : null}
                           </div>
@@ -508,7 +514,7 @@ export function MyHistory() {
                       </div>
                       {record.overtimeMinutes && record.overtimeMinutes > 0 ? (
                         <div className="mt-1 text-[10px] text-rose-700 bg-rose-50 border border-rose-100 rounded px-1.5 py-0.5 inline-block">
-                          HE: {Math.floor(record.overtimeMinutes/60)}h
+                          HE: {Math.floor(record.overtimeMinutes/60)}h {record.overtimeMinutes%60}m
                         </div>
                       ) : null}
                     </div>

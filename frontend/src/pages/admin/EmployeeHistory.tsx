@@ -150,16 +150,15 @@ export function EmployeeHistory() {
       try {
         const start = parseTime(record.checkIn);
         let end = parseTime(record.checkOut);
-
-        if (end < start) end += 24 * 60;
+        if (end < start) return '-';
 
         let lunchMinutes = 0;
         if (record.lunchStart && record.lunchEnd) {
           let lunchS = parseTime(record.lunchStart);
           let lunchE = parseTime(record.lunchEnd);
 
-          if (lunchS < start) lunchS += 24 * 60;
-          if (lunchE < lunchS) lunchE += 24 * 60;
+          if (lunchS < start) return '-';
+          if (lunchE < lunchS) return '-';
 
           const overlapStart = Math.max(start, lunchS);
           const overlapEnd = Math.min(end, lunchE);
@@ -356,7 +355,7 @@ export function EmployeeHistory() {
                                                 </div>
                                                 {record && record.overtimeMinutes && record.overtimeMinutes > 0 ? (
                                                   <div className="mt-2 text-[10px] text-rose-700 bg-rose-50 border border-rose-100 rounded px-2 py-1 inline-block">
-                                                    HE: {Math.floor(record.overtimeMinutes/60)}h
+                                                    HE: {Math.floor(record.overtimeMinutes/60)}h {record.overtimeMinutes%60}m
                                                   </div>
                                                 ) : null}
                                               </>
