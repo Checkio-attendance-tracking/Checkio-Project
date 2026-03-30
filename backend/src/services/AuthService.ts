@@ -18,7 +18,8 @@ function sanitizeUserForClient(user: any) {
 
 export class AuthService {
   async login(email: string, password: string) {
-    const user = await userRepo.findByEmail(email);
+    const normalizedEmail = email.trim();
+    const user = await userRepo.findByEmail(normalizedEmail);
     if (!user) {
       throw new Error("Invalid credentials");
     }

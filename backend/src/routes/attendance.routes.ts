@@ -18,8 +18,5 @@ router.get("/mis-asistencias", authMiddleware, tenantMiddleware, roleMiddleware(
 // HR routes
 router.get("/", authMiddleware, tenantMiddleware, roleMiddleware(['admin']), controller.getAll.bind(controller));
 router.get("/:id", authMiddleware, tenantMiddleware, roleMiddleware(['admin']), controller.getById.bind(controller));
-router.post("/", authMiddleware, tenantMiddleware, roleMiddleware(['admin']), controller.create.bind(controller));
-router.put("/:id", authMiddleware, tenantMiddleware, roleMiddleware(['admin']), controller.update.bind(controller));
-router.delete("/:id", authMiddleware, tenantMiddleware, roleMiddleware(['admin']), controller.delete.bind(controller));
 
 export default router;

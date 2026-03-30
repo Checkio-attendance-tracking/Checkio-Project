@@ -27,7 +27,8 @@ export function Login({ onLogin }: LoginProps) {
     setError('');
 
     try {
-      const user = await authService.login(username, password);
+      const email = username.trim().toLowerCase();
+      const user = await authService.login(email, password);
       onLogin(user);
     } catch (err: unknown) {
       const message =

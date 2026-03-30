@@ -57,21 +57,6 @@ export const attendanceService = {
 
     const response = await api.get<unknown[]>('/asistencias', { params });
     return response.data.map(mapBackendAttendanceToFrontend);
-  },
-  
-  // Admin methods
-  async create(data: Partial<AttendanceRecord>) {
-    const response = await api.post('/asistencias', data);
-    return mapBackendAttendanceToFrontend(response.data);
-  },
-
-  async update(id: string, data: Partial<AttendanceRecord>) {
-    const response = await api.put(`/asistencias/${id}`, data);
-    return mapBackendAttendanceToFrontend(response.data);
-  },
-
-  async delete(id: string) {
-    await api.delete(`/asistencias/${id}`);
   }
 };
 

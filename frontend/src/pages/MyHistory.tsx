@@ -31,6 +31,16 @@ export function MyHistory() {
   const [toast, setToast] = useState<{ kind: "success" | "warning" | "error"; title: string; message?: string } | null>(null);
   const daysInMonth = useMemo(() => eachDayOfInterval({ start: startOfMonth(currentMonth), end: endOfMonth(currentMonth) }), [currentMonth]);
 
+  const currentUser = useMemo(() => {
+    try {
+      const raw = localStorage.getItem('user');
+      return raw ? JSON.parse(raw) as { role?: string } : null;
+    } catch {
+      return null;
+    }
+  }, []);
+  const isAdmin = currentUser?.role === 'admin';
+
   const normalizeDate = (isoOrDate?: string | null) => {
     if (!isoOrDate) return undefined;
     return isoOrDate.includes("T") ? isoOrDate.split("T")[0] : isoOrDate;
@@ -463,7 +473,7 @@ export function MyHistory() {
                     </span>
                     {record && record.status !== 'weekend' && record.status !== 'dayOff' && (
                       <div className="flex items-center gap-1">
-                        {(record.latCheckIn || record.latCheckOut) && (
+                        {isAdmin && (record.latCheckIn || record.latCheckOut) && (
                           <button onClick={() => setSelectedRecord(record)} className="hidden sm:inline-flex text-gray-400 hover:text-indigo-600 transition-colors" title="Ver ubicación">
                             <MapPin size={14} />
                           </button>
@@ -612,6 +622,25 @@ export function MyHistory() {
                 <ClipboardList size={18} className="text-indigo-600" />
                 <span className="text-sm font-medium">Solicitudes</span>
               </button>
+              
+              {isAdmin && (
+                <>
+                  <button
+                    onClick={() => { setMobileMenuOpen(false); navigate('/admin'); }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-50"
+                  >
+                    <ClipboardList size={18} className="text-indigo-600" />
+                    <span className="text-sm font-medium">Panel RRHH</span>
+                  </button>
+                  <button
+                    onClick={() => { setMobileMenuOpen(false); navigate('/admin/correction-requests'); }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-50"
+                  >
+                    <CheckCircle2 size={18} className="text-indigo-600" />
+                    <span className="text-sm font-medium">Revisar solicitudes</span>
+                  </button>
+                </>
+              )}
 
               <button
                 onClick={() => { setMobileMenuOpen(false); authService.logout(); }}
@@ -625,7 +654,7 @@ export function MyHistory() {
         </div>
       )}
 
-      {selectedRecord && (
+      {isAdmin && selectedRecord && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl overflow-hidden">
             <div className="flex items-center justify-between p-4 border-b border-gray-100">

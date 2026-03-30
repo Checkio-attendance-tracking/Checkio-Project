@@ -309,26 +309,15 @@ export class AttendanceService {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async create(companyId: string, data: any) {
-    // Validate that employee belongs to company
-    const employee = await employeeRepo.findById(companyId, data.employeeId);
-    if (!employee) throw new Error("Employee not found");
-
-    // Check for existing record for this date/employee
-    const existing = await attendanceRepo.findByDate(companyId, data.employeeId, data.date);
-    if (existing) throw new Error("Attendance record already exists for this date");
-
-    const created = await attendanceRepo.create(companyId, data);
-    return withStatus(created, employee.workSchedule);
+    throw new Error("Not allowed");
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async update(companyId: string, id: string, data: any) {
-    const updated = await attendanceRepo.update(id, data, companyId);
-    const record = await attendanceRepo.findById(companyId, id);
-    return record ? withStatus(record) : withStatus(updated);
+    throw new Error("Not allowed");
   }
 
   async delete(companyId: string, id: string) {
-    return attendanceRepo.delete(companyId, id);
+    throw new Error("Not allowed");
   }
 }

@@ -3,8 +3,9 @@ import { Prisma } from "@prisma/client";
 
 export class UserRepository {
   async findByEmail(email: string) {
-    return prisma.user.findUnique({
-      where: { email },
+    const normalized = email.trim();
+    return prisma.user.findFirst({
+      where: { email: { equals: normalized, mode: 'insensitive' } },
       include: { company: true, employee: true }
     });
   }

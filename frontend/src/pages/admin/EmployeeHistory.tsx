@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, ArrowLeft, Calendar, MapPin, X, Pencil, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowLeft, Calendar, MapPin, X } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, getDay, parseISO, isSameDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { employeeService } from '../../services/employee';
@@ -19,9 +19,6 @@ export function EmployeeHistory() {
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRecord, setSelectedRecord] = useState<AttendanceRecord | null>(null);
-  const [editingRecord, setEditingRecord] = useState<AttendanceRecord | null>(null);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const loadData = async () => {
     setLoading(true);
@@ -138,60 +135,6 @@ export function EmployeeHistory() {
     if (devices.length > 1 || osList.length > 1) return 'Cambio detectado';
     if (devices.length === 1 || osList.length === 1) return 'Sin cambios';
     return 'Sin datos';
-  };
-
-  const handleUpdateRecord = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!editingRecord || !id) return;
-
-    setIsUpdating(true);
-    const formData = new FormData(e.currentTarget);
-    
-    const toPeruISOString = (dateStr: string, timeStr: string) => {
-      if (!timeStr) return undefined;
-      const [y, m, d] = dateStr.split('-').map(Number);
-      const [hh, mm] = timeStr.split(':').map(Number);
-      if (!y || !m || !d || Number.isNaN(hh) || Number.isNaN(mm)) return undefined;
-      const utcMs = Date.UTC(y, m - 1, d, hh + 5, mm, 0, 0);
-      return new Date(utcMs).toISOString();
-    };
-
-    const updateData = {
-        checkIn: toPeruISOString(editingRecord.date, formData.get('checkIn') as string),
-        lunchStart: toPeruISOString(editingRecord.date, formData.get('lunchStart') as string),
-        lunchEnd: toPeruISOString(editingRecord.date, formData.get('lunchEnd') as string),
-        checkOut: toPeruISOString(editingRecord.date, formData.get('checkOut') as string),
-    };
-
-    try {
-        const updated = await attendanceService.update(editingRecord.id, updateData);
-        setRecords(prev => prev.map(r => r.id === updated.id ? updated : r));
-        setEditingRecord(null);
-    } catch (error) {
-        console.error("Error updating record:", error);
-        alert("Error al actualizar el registro. Verifique la secuencia de horas.");
-    } finally {
-        setIsUpdating(false);
-    }
-  };
-
-  const handleDeleteRecord = async () => {
-    if (!editingRecord) return;
-
-    const ok = window.confirm(`¿Eliminar la asistencia del ${editingRecord.date}? Esta acción no se puede deshacer.`);
-    if (!ok) return;
-
-    setIsDeleting(true);
-    try {
-      await attendanceService.delete(editingRecord.id);
-      setRecords((prev) => prev.filter((r) => r.id !== editingRecord.id));
-      setEditingRecord(null);
-    } catch (error) {
-      console.error('Error deleting record:', error);
-      alert('Error al eliminar el registro.');
-    } finally {
-      setIsDeleting(false);
-    }
   };
 
   const calculateHoursWorked = (record: AttendanceRecord | undefined): string => {
@@ -375,15 +318,6 @@ export function EmployeeHistory() {
                                                              record.status === 'absent' ? 'Falta' : record.status}
                                                         </span>
                                                     )}
-                                                    {record && record.status !== 'weekend' && record.status !== 'dayOff' && (
-                                                        <button
-                                                            onClick={() => setEditingRecord(record)}
-                                                            className="p-2 -mr-2 text-gray-500 hover:text-indigo-600"
-                                                            title="Editar asistencia"
-                                                        >
-                                                            <Pencil size={18} />
-                                                        </button>
-                                                    )}
                                                     {record && record.status !== 'weekend' && record.status !== 'dayOff' && hasMap && (
                                                         <button
                                                             onClick={() => setSelectedRecord(record)}
@@ -398,10 +332,18 @@ export function EmployeeHistory() {
 
                                             {record && record.status !== 'weekend' && record.status !== 'dayOff' && record.status !== 'absent' ? (
                                               <>
-                                                <div className="mt-2 grid grid-cols-3 gap-2">
+                                                <div className="mt-2 grid grid-cols-2 gap-2">
                                                     <div className="bg-gray-50 rounded-lg px-2 py-1.5">
                                                         <div className="text-[10px] text-gray-500">In</div>
                                                         <div className="text-xs font-semibold text-gray-800">{record.checkIn || '--:--'}</div>
+                                                    </div>
+                                                    <div className="bg-gray-50 rounded-lg px-2 py-1.5">
+                                                        <div className="text-[10px] text-gray-500">Alm</div>
+                                                        <div className="text-xs font-semibold text-gray-800">
+                                                          {record.lunchStart
+                                                            ? `${record.lunchStart}-${record.lunchEnd || '??:??'}`
+                                                            : '--:--'}
+                                                        </div>
                                                     </div>
                                                     <div className="bg-gray-50 rounded-lg px-2 py-1.5">
                                                         <div className="text-[10px] text-gray-500">Out</div>
@@ -460,13 +402,6 @@ export function EmployeeHistory() {
                                       </span>
                                       {record && record.status !== 'weekend' && record.status !== 'dayOff' && (
                                           <div className="flex items-center gap-1">
-                                              <button 
-                                                  onClick={() => setEditingRecord(record)}
-                                                  className="hidden sm:inline-flex text-gray-400 hover:text-indigo-600 transition-colors p-1"
-                                                  title="Editar asistencia"
-                                              >
-                                                  <Pencil size={14} />
-                                              </button>
                                               {(record.latCheckIn || record.latCheckOut) && (
                                                   <button 
                                                       onClick={() => setSelectedRecord(record)}
@@ -492,6 +427,12 @@ export function EmployeeHistory() {
                                       <div className="space-y-1 mt-1">
                                           <div className="text-[10px] sm:text-xs text-gray-500 flex justify-between">
                                               <span>In:</span> <span className="font-medium text-gray-700">{record.checkIn}</span>
+                                          </div>
+                                          <div className="text-[10px] sm:text-xs text-gray-500 flex justify-between">
+                                              <span>Alm:</span>{' '}
+                                              <span className="font-medium text-gray-700">
+                                                {record.lunchStart ? `${record.lunchStart}-${record.lunchEnd || '??:??'}` : '--:--'}
+                                              </span>
                                           </div>
                                           <div className="text-[10px] sm:text-xs text-gray-500 flex justify-between">
                                               <span>Out:</span> <span className="font-medium text-gray-700">{record.checkOut}</span>
@@ -658,53 +599,6 @@ export function EmployeeHistory() {
                         Cerrar
                     </button>
                 </div>
-            </div>
-        </div>
-      )}
-
-      {/* Modal de Edición */}
-      {editingRecord && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
-                <div className="flex items-center justify-between p-4 border-b border-gray-100">
-                    <h3 className="text-lg font-bold text-gray-900">Editar Asistencia - {editingRecord.date}</h3>
-                    <button onClick={() => setEditingRecord(null)} className="p-2 hover:bg-gray-100 rounded-full text-gray-500"><X size={20} /></button>
-                </div>
-                <form onSubmit={handleUpdateRecord} className="p-6 space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Ingreso</label>
-                            <input type="time" name="checkIn" defaultValue={editingRecord.checkIn} className="w-full border border-gray-300 rounded-lg p-2" />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Inicio Almuerzo</label>
-                            <input type="time" name="lunchStart" defaultValue={editingRecord.lunchStart} className="w-full border border-gray-300 rounded-lg p-2" />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Fin Almuerzo</label>
-                            <input type="time" name="lunchEnd" defaultValue={editingRecord.lunchEnd} className="w-full border border-gray-300 rounded-lg p-2" />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Salida</label>
-                            <input type="time" name="checkOut" defaultValue={editingRecord.checkOut} className="w-full border border-gray-300 rounded-lg p-2" />
-                        </div>
-                    </div>
-                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 mt-4">
-                        <button
-                          type="button"
-                          onClick={handleDeleteRecord}
-                          disabled={isUpdating || isDeleting}
-                          className="mr-auto inline-flex items-center gap-2 px-4 py-2 text-red-700 hover:bg-red-50 rounded-lg border border-red-200 disabled:opacity-50"
-                        >
-                          <Trash2 size={16} />
-                          {isDeleting ? 'Eliminando...' : 'Eliminar'}
-                        </button>
-                        <button type="button" onClick={() => setEditingRecord(null)} disabled={isUpdating || isDeleting} className="px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg border border-gray-300 disabled:opacity-50">Cancelar</button>
-                        <button type="submit" disabled={isUpdating || isDeleting} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-white disabled:opacity-50">
-                            {isUpdating ? 'Guardando...' : 'Guardar Cambios'}
-                        </button>
-                    </div>
-                </form>
             </div>
         </div>
       )}
