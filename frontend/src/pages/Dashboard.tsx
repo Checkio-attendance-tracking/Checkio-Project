@@ -27,6 +27,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
   const [locationHelpDetails, setLocationHelpDetails] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<{ label: string; type: 'checkIn' | 'lunchStart' | 'lunchEnd' | 'checkOut' } | null>(null);
   const navigate = useNavigate();
+  const isEmployee = user.role === 'employee';
 
   const pickCurrentRecord = (history: AttendanceRecord[]) => {
     const open = history.find((r) => Boolean(r.checkIn) && !r.checkOut);
@@ -38,6 +39,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
   useEffect(() => {
     const loadToday = async () => {
       try {
+        if (!isEmployee) return;
         const history = await attendanceService.getMyHistory();
         setTodayRecord(pickCurrentRecord(history));
       } catch {
@@ -45,7 +47,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
       }
     };
     loadToday();
-  }, []);
+  }, [isEmployee]);
 
   const translateError = (msg: string) => {
     const m = msg?.toLowerCase() || '';
@@ -108,6 +110,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
   };
 
   const handleAction = async (actionLabel: string) => {
+    if (!isEmployee) return;
     if (isMarking) return;
     setIsMarking(true);
 
@@ -294,6 +297,25 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                 <span className="text-sm font-medium">Solicitudes</span>
               </button>
 
+            {user.role === 'admin' && (
+              <>
+                <button
+                  onClick={() => { setMobileMenuOpen(false); navigate('/admin'); }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-50"
+                >
+                  <Settings size={18} className="text-indigo-600" />
+                  <span className="text-sm font-medium">Panel RRHH</span>
+                </button>
+                <button
+                  onClick={() => { setMobileMenuOpen(false); navigate('/admin/correction-requests'); }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-50"
+                >
+                  <CheckCircle2 size={18} className="text-indigo-600" />
+                  <span className="text-sm font-medium">Revisar solicitudes</span>
+                </button>
+              </>
+            )}
+
               <button
                 onClick={() => { setMobileMenuOpen(false); onLogout(); }}
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-600 hover:bg-red-50"
@@ -340,7 +362,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
               sublabel="Marcar inicio de jornada"
               icon={<LogIn />} 
               color="green" 
-              disabled={Boolean(todayRecord?.checkIn)}
+              disabled={!isEmployee || Boolean(todayRecord?.checkIn)}
               onClick={() => handleAction('Ingreso')}
             />
             
@@ -349,7 +371,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
               sublabel="Marcar inicio de refrigerio"
               icon={<Utensils />} 
               color="orange" 
-              disabled={!(todayRecord?.checkIn) || Boolean(todayRecord?.lunchStart) || Boolean(todayRecord?.checkOut)}
+              disabled={!isEmployee || !(todayRecord?.checkIn) || Boolean(todayRecord?.lunchStart) || Boolean(todayRecord?.checkOut)}
               onClick={() => handleAction('Inicio de Almuerzo')}
             />
             
@@ -358,7 +380,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
               sublabel="Marcar fin de refrigerio"
               icon={<Utensils />} 
               color="blue" 
-              disabled={!todayRecord?.lunchStart || Boolean(todayRecord?.lunchEnd) || Boolean(todayRecord?.checkOut)}
+              disabled={!isEmployee || !todayRecord?.lunchStart || Boolean(todayRecord?.lunchEnd) || Boolean(todayRecord?.checkOut)}
               onClick={() => handleAction('Fin de Almuerzo')}
             />
             
@@ -367,7 +389,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
               sublabel="Marcar fin de jornada"
               icon={<Briefcase />} 
               color="red" 
-              disabled={!(todayRecord?.checkIn) || Boolean(todayRecord?.checkOut)}
+              disabled={!isEmployee || !(todayRecord?.checkIn) || Boolean(todayRecord?.checkOut)}
               onClick={() => handleAction('Salida')}
             />
           </section>
