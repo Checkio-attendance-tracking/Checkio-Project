@@ -23,6 +23,8 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+
     const checkAuth = async () => {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -34,23 +36,45 @@ function App() {
         // Try to recover from local storage first for speed
         const storedUser = localStorage.getItem('user');
         if (storedUser) {
-          setUser(JSON.parse(storedUser));
+          try {
+            setUser(JSON.parse(storedUser));
+          } catch {
+            localStorage.removeItem('user');
+          }
         }
-        
-        // Then verify with API
+
+        if (storedUser) {
+          setLoading(false);
+        }
+
         const user = await authService.me();
-        setUser(user);
+        if (!cancelled) {
+          setUser(user);
+        }
       } catch (error) {
         console.error('Auth check failed:', error);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        setUser(null);
+        const status = (error as { response?: { status?: number } })?.response?.status;
+        const shouldLogout = status === 401 || !localStorage.getItem('user');
+
+        if (shouldLogout) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          if (!cancelled) {
+            setUser(null);
+          }
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
     checkAuth();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleLogout = () => {
