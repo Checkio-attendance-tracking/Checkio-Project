@@ -7,6 +7,7 @@ import attendanceRoutes from "./routes/attendance.routes";
 import companyRoutes from "./routes/company.routes";
 import superAdminRoutes from "./routes/superadmin.routes";
 import workScheduleChangeRoutes from "./routes/workScheduleChange.routes";
+import notificationRoutes from "./routes/notification.routes";
 import { prisma } from "./config/database";
 
 const app = express();
@@ -31,6 +32,7 @@ app.use("/empleados", employeeRoutes);
 app.use("/asistencias", attendanceRoutes);
 app.use("/empresa", companyRoutes);
 app.use("/solicitudes-correccion", workScheduleChangeRoutes);
+app.use("/notificaciones", notificationRoutes);
 
 app.get("/time", (req, res) => {
   res.json({ time: new Date().toISOString() });

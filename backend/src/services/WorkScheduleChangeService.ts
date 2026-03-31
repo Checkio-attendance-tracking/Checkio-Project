@@ -2,6 +2,13 @@ import { prisma } from "../config/database";
 
 type MarkType = "checkIn" | "lunchStart" | "lunchEnd" | "checkOut";
 
+function markLabel(mark: MarkType): string {
+  if (mark === "checkIn") return "Ingreso";
+  if (mark === "lunchStart") return "Inicio almuerzo";
+  if (mark === "lunchEnd") return "Fin almuerzo";
+  return "Salida";
+}
+
 function peruHHMMFromDate(d: Date): string {
   const utcMinutes = d.getUTCHours() * 60 + d.getUTCMinutes();
   let peruMinutes = utcMinutes - 5 * 60;
@@ -54,57 +61,89 @@ export class AttendanceCorrectionService {
     employeeId: string,
     data: { date: string; markType: MarkType; requestedTime: string; reason: string }
   ) {
-    const start = new Date(`${data.date}T00:00:00.000Z`);
-    const end = new Date(`${data.date}T23:59:59.999Z`);
+    return prisma.$transaction(async (tx) => {
+      const start = new Date(`${data.date}T00:00:00.000Z`);
+      const end = new Date(`${data.date}T23:59:59.999Z`);
 
-    const attendance = await prisma.attendance.findFirst({
-      where: { companyId, employeeId, date: { gte: start, lte: end } },
-      select: { id: true, date: true, checkIn: true, lunchStart: true, lunchEnd: true, checkOut: true },
-    });
-    if (!attendance) throw new Error("No existe una marcación para ese día");
+      const [employee, attendance] = await Promise.all([
+        tx.employee.findFirst({
+          where: { id: employeeId, companyId },
+          select: { firstName: true, lastName: true },
+        }),
+        tx.attendance.findFirst({
+          where: { companyId, employeeId, date: { gte: start, lte: end } },
+          select: { id: true, date: true, checkIn: true, lunchStart: true, lunchEnd: true, checkOut: true },
+        }),
+      ]);
+      if (!attendance) throw new Error("No existe una marcación para ese día");
 
-    const current = attendance[data.markType];
-    if (!current) throw new Error("No existe esa marcación para corregir");
+      const current = attendance[data.markType];
+      if (!current) throw new Error("No existe esa marcación para corregir");
 
-    const existing = await prisma.attendanceCorrectionRequest.findFirst({
-      where: {
-        companyId,
-        employeeId,
-        attendanceId: attendance.id,
-        markType: data.markType,
-        status: "pending",
-      },
-      select: { id: true },
-    });
-
-    if (existing) {
-      return prisma.attendanceCorrectionRequest.update({
-        where: { id: existing.id },
-        data: {
-          requestedTime: data.requestedTime,
-          previousTimeAtRequest: peruHHMMFromDate(current),
-          reason: data.reason,
+      const existing = await tx.attendanceCorrectionRequest.findFirst({
+        where: {
+          companyId,
+          employeeId,
+          attendanceId: attendance.id,
+          markType: data.markType,
+          status: "pending",
         },
-        include: {
-          attendance: { select: { date: true } },
-        },
+        select: { id: true },
       });
-    }
 
-    return prisma.attendanceCorrectionRequest.create({
-      data: {
-        companyId,
-        employeeId,
-        attendanceId: attendance.id,
-        markType: data.markType,
-        requestedTime: data.requestedTime,
-        previousTimeAtRequest: peruHHMMFromDate(current),
-        reason: data.reason,
-        status: "pending",
-      },
-      include: {
-        attendance: { select: { date: true } },
-      },
+      const isNew = !existing;
+      const saved = existing
+        ? await tx.attendanceCorrectionRequest.update({
+            where: { id: existing.id },
+            data: {
+              requestedTime: data.requestedTime,
+              previousTimeAtRequest: peruHHMMFromDate(current),
+              reason: data.reason,
+            },
+            include: {
+              attendance: { select: { date: true } },
+            },
+          })
+        : await tx.attendanceCorrectionRequest.create({
+            data: {
+              companyId,
+              employeeId,
+              attendanceId: attendance.id,
+              markType: data.markType,
+              requestedTime: data.requestedTime,
+              previousTimeAtRequest: peruHHMMFromDate(current),
+              reason: data.reason,
+              status: "pending",
+            },
+            include: {
+              attendance: { select: { date: true } },
+            },
+          });
+
+      const adminUsers = await tx.user.findMany({
+        where: { companyId, role: "admin" },
+        select: { id: true },
+      });
+
+      const dateStr = attendance.date.toISOString().slice(0, 10);
+      const employeeName = employee ? `${employee.firstName} ${employee.lastName}` : "Un colaborador";
+      const body = `${employeeName} solicitó corregir ${markLabel(data.markType)} del ${dateStr} (${peruHHMMFromDate(current)} → ${data.requestedTime}).`;
+
+      if (isNew && adminUsers.length > 0) {
+        await tx.notification.createMany({
+          data: adminUsers.map((u) => ({
+            companyId,
+            toUserId: u.id,
+            type: "attendanceCorrectionCreated",
+            title: "Nueva solicitud de corrección",
+            body,
+            link: "/admin/correction-requests",
+            metadata: JSON.stringify({ requestId: saved.id, employeeId, attendanceId: attendance.id, markType: data.markType, date: dateStr }),
+          })),
+        });
+      }
+
+      return saved;
     });
   }
 
@@ -161,7 +200,7 @@ export class AttendanceCorrectionService {
         data: { [mark]: updatedDate },
       });
 
-      return tx.attendanceCorrectionRequest.update({
+      const reviewed = await tx.attendanceCorrectionRequest.update({
         where: { id: request.id },
         data: {
           status: "approved",
@@ -176,29 +215,83 @@ export class AttendanceCorrectionService {
           reviewedByUser: { select: { id: true, name: true, email: true } },
         },
       });
+
+      const employeeUser = await tx.user.findFirst({
+        where: { companyId, employeeId: request.employeeId },
+        select: { id: true },
+      });
+
+      if (employeeUser) {
+        const dateStr = attendance.date.toISOString().slice(0, 10);
+        const body = `Recursos Humanos aprobó tu solicitud de corrección de ${markLabel(mark)} del ${dateStr} (${reviewed.previousTimeApplied} → ${reviewed.requestedTime}).`;
+        await tx.notification.create({
+          data: {
+            companyId,
+            toUserId: employeeUser.id,
+            type: "attendanceCorrectionApproved",
+            title: "Solicitud aprobada",
+            body,
+            link: "/dashboard/history?tab=solicitudes",
+            metadata: JSON.stringify({ requestId: reviewed.id, attendanceId: attendance.id, markType: mark, date: dateStr }),
+          },
+        });
+      }
+
+      return reviewed;
     });
   }
 
   async reject(companyId: string, reviewerUserId: string, requestId: string, comment?: string) {
-    const request = await prisma.attendanceCorrectionRequest.findFirst({
-      where: { id: requestId, companyId },
-    });
-    if (!request) throw new Error("Request not found");
-    if (request.status !== "pending") throw new Error("Request already reviewed");
+    return prisma.$transaction(async (tx) => {
+      const request = await tx.attendanceCorrectionRequest.findFirst({
+        where: { id: requestId, companyId },
+      });
+      if (!request) throw new Error("Request not found");
+      if (request.status !== "pending") throw new Error("Request already reviewed");
 
-    return prisma.attendanceCorrectionRequest.update({
-      where: { id: request.id },
-      data: {
-        status: "rejected",
-        reviewedByUserId: reviewerUserId,
-        reviewedAt: new Date(),
-        reviewComment: comment,
-      },
-      include: {
-        attendance: { select: { date: true } },
-        employee: { select: { id: true, firstName: true, lastName: true, email: true } },
-        reviewedByUser: { select: { id: true, name: true, email: true } },
-      },
+      const attendance = await tx.attendance.findFirst({
+        where: { id: request.attendanceId, companyId, employeeId: request.employeeId },
+        select: { id: true, date: true },
+      });
+      if (!attendance) throw new Error("Attendance record not found");
+
+      const reviewed = await tx.attendanceCorrectionRequest.update({
+        where: { id: request.id },
+        data: {
+          status: "rejected",
+          reviewedByUserId: reviewerUserId,
+          reviewedAt: new Date(),
+          reviewComment: comment,
+        },
+        include: {
+          attendance: { select: { date: true } },
+          employee: { select: { id: true, firstName: true, lastName: true, email: true } },
+          reviewedByUser: { select: { id: true, name: true, email: true } },
+        },
+      });
+
+      const employeeUser = await tx.user.findFirst({
+        where: { companyId, employeeId: request.employeeId },
+        select: { id: true },
+      });
+
+      if (employeeUser) {
+        const dateStr = attendance.date.toISOString().slice(0, 10);
+        const body = `Recursos Humanos rechazó tu solicitud de corrección de ${markLabel(request.markType as MarkType)} del ${dateStr}.`;
+        await tx.notification.create({
+          data: {
+            companyId,
+            toUserId: employeeUser.id,
+            type: "attendanceCorrectionRejected",
+            title: "Solicitud rechazada",
+            body,
+            link: "/dashboard/history?tab=solicitudes",
+            metadata: JSON.stringify({ requestId: reviewed.id, attendanceId: attendance.id, markType: request.markType, date: dateStr }),
+          },
+        });
+      }
+
+      return reviewed;
     });
   }
 }

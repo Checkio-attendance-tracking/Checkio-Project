@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { LayoutDashboard, Users, LogOut, Settings, Menu, X, Clock } from 'lucide-react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { NotificationBell } from '../../components/NotificationBell';
 
 interface AdminLayoutProps {
   onLogout: () => void;
@@ -26,12 +27,15 @@ export function AdminLayout({ onLogout }: AdminLayoutProps) {
           <img src="/checkio-logo.svg" alt="Checkio" className="h-7 w-auto" />
           <span className="text-lg font-bold text-gray-800">Checkio</span>
         </div>
-        <button 
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
-        >
-          {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        <div className="flex items-center gap-2">
+          <NotificationBell variant="sheet" />
+          <button 
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+          >
+            {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
       </div>
 
       {/* Overlay for mobile */}
@@ -78,7 +82,11 @@ export function AdminLayout({ onLogout }: AdminLayoutProps) {
           })}
         </nav>
 
-        <div className="p-4 border-t border-gray-100">
+        <div className="p-4 border-t border-gray-100 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Notificaciones</div>
+            <NotificationBell variant="popover" />
+          </div>
           <button
             onClick={onLogout}
             className="flex items-center space-x-3 px-4 py-3 w-full text-left text-red-600 hover:bg-red-50 rounded-lg transition-colors"

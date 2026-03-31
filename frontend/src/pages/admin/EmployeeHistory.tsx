@@ -149,13 +149,13 @@ export function EmployeeHistory() {
     
       try {
         const start = parseTime(record.checkIn);
-        let end = parseTime(record.checkOut);
+        const end = parseTime(record.checkOut);
         if (end < start) return '-';
 
         let lunchMinutes = 0;
         if (record.lunchStart && record.lunchEnd) {
-          let lunchS = parseTime(record.lunchStart);
-          let lunchE = parseTime(record.lunchEnd);
+          const lunchS = parseTime(record.lunchStart);
+          const lunchE = parseTime(record.lunchEnd);
 
           if (lunchS < start) return '-';
           if (lunchE < lunchS) return '-';

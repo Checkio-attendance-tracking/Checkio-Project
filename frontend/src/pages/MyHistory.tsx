@@ -128,12 +128,12 @@ export function MyHistory() {
     const parseTime = (t: string) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
     try {
       const start = parseTime(record.checkIn);
-      let end = parseTime(record.checkOut);
+      const end = parseTime(record.checkOut);
       if (end < start) return '-';
       let lunch = 0;
       if (record.lunchStart && record.lunchEnd) {
-        let ls = parseTime(record.lunchStart);
-        let le = parseTime(record.lunchEnd);
+        const ls = parseTime(record.lunchStart);
+        const le = parseTime(record.lunchEnd);
         if (ls < start) return '-';
         if (le < ls) return '-';
         const s = Math.max(start, ls);

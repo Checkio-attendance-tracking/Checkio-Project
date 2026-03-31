@@ -3,6 +3,7 @@ import { usePeruTime } from '../hooks/usePeruTime';
 import { Clock } from '../components/Clock';
 import { ActionButton } from '../components/ActionButton';
 import { Logo } from '../components/Logo';
+import { NotificationBell } from '../components/NotificationBell';
 import { LogOut, LogIn, Utensils, Briefcase, User as UserIcon, Settings, MapPin, X, RefreshCw, AlertTriangle, CheckCircle2, Calendar, Menu, ClipboardList } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
@@ -236,6 +237,8 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
               </button>
             </div>
 
+            <NotificationBell className="hidden md:block" variant="popover" />
+
             <button 
               onClick={onLogout}
               className="hidden md:inline-flex p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
@@ -243,6 +246,8 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
             >
               <LogOut size={20} />
             </button>
+
+            <NotificationBell className="md:hidden" variant="sheet" />
 
             <button
               onClick={() => setMobileMenuOpen(true)}

@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model Company {
@@ -30,6 +30,7 @@ model Company {
   employees Employee[]
   attendances Attendance[]
   attendanceCorrectionRequests AttendanceCorrectionRequest[]
+  notifications Notification[]
 
   @@map("companies")
 }
@@ -46,6 +47,7 @@ model User {
   employee     Employee? @relation(fields: [employeeId], references: [id])
   createdAt    DateTime  @default(now())
   reviewedAttendanceCorrections AttendanceCorrectionRequest[] @relation("attendanceCorrectionReviewer")
+  notifications Notification[] @relation("notificationRecipient")
 
   @@map("users")
 }
@@ -148,4 +150,23 @@ model Attendance {
   @@index([companyId, date])
   @@index([companyId, employeeId, date])
   @@map("attendances")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id])
+  toUserId  String
+  toUser    User     @relation("notificationRecipient", fields: [toUserId], references: [id])
+
+  type      String
+  title     String
+  body      String
+  link      String?
+  metadata  String?
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([companyId, toUserId, readAt, createdAt])
+  @@map("notifications")
 }
