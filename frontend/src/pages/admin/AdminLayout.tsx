@@ -48,13 +48,16 @@ export function AdminLayout({ onLogout }: AdminLayoutProps) {
 
       {/* Sidebar */}
       <aside className={`
-        fixed lg:static inset-y-0 left-0 w-64 bg-white border-r border-gray-200 flex flex-col z-20
+        fixed lg:static inset-y-0 right-0 w-64 bg-white border-l lg:border-l-0 lg:border-r border-gray-200 flex flex-col z-20
         transform transition-transform duration-200 ease-in-out
-        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
       `}>
-        <div className="p-6 border-b border-gray-100 hidden lg:flex items-center space-x-3 cursor-pointer" onClick={() => navigate('/')}>
-          <img src="/checkio-logo.svg" alt="Checkio" className="h-8 w-auto" />
-          <span className="text-xl font-bold text-gray-800">Checkio</span>
+        <div className="p-6 border-b border-gray-100 hidden lg:flex items-center justify-between">
+          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => navigate('/')}>
+            <img src="/checkio-logo.svg" alt="Checkio" className="h-8 w-auto" />
+            <span className="text-xl font-bold text-gray-800">Checkio</span>
+          </div>
+          <NotificationBell variant="popover" />
         </div>
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto mt-16 lg:mt-0">
@@ -82,11 +85,7 @@ export function AdminLayout({ onLogout }: AdminLayoutProps) {
           })}
         </nav>
 
-        <div className="p-4 border-t border-gray-100 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Notificaciones</div>
-            <NotificationBell variant="popover" />
-          </div>
+        <div className="p-4 border-t border-gray-100">
           <button
             onClick={onLogout}
             className="flex items-center space-x-3 px-4 py-3 w-full text-left text-red-600 hover:bg-red-50 rounded-lg transition-colors"
