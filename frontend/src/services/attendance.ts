@@ -49,6 +49,8 @@ export const attendanceService = {
     if (monthOrDate) {
       if (isExactDate) {
         params.date = format(monthOrDate, 'yyyy-MM-dd');
+      } else {
+        params.month = format(monthOrDate, 'yyyy-MM');
       }
     }
     if (employeeId) {

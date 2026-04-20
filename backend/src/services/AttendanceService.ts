@@ -166,6 +166,15 @@ function getDayRangeInTimeZone(now: Date, timeZone: string) {
   return { start, end };
 }
 
+function monthRangeFromYYYYMM(month?: string) {
+  if (!month || !/^\d{4}-\d{2}$/.test(month)) return undefined;
+  const [y, m] = month.split("-").map((v) => Number(v));
+  if (!y || !m || m < 1 || m > 12) return undefined;
+  const start = new Date(Date.UTC(y, m - 1, 1, 0, 0, 0, 0));
+  const end = new Date(Date.UTC(y, m, 0, 23, 59, 59, 999));
+  return { start, end };
+}
+
 export class AttendanceService {
   // Employee methods
   async markAttendance(
@@ -289,15 +298,17 @@ export class AttendanceService {
     }
   }
 
-  async getMyHistory(companyId: string, employeeId: string) {
-    const records = await attendanceRepo.findAllByEmployee(companyId, employeeId);
+  async getMyHistory(companyId: string, employeeId: string, month?: string) {
+    const monthRange = monthRangeFromYYYYMM(month);
+    const records = await attendanceRepo.findAllByEmployee(companyId, employeeId, monthRange);
     return records.map((r) => withStatus(r));
   }
 
   // HR methods
-  async getAll(companyId: string, date?: string, employeeId?: string) {
+  async getAll(companyId: string, date?: string, employeeId?: string, month?: string) {
     const queryDate = date ? new Date(date) : undefined;
-    const records = await attendanceRepo.findAllByCompany(companyId, queryDate, employeeId);
+    const monthRange = monthRangeFromYYYYMM(month);
+    const records = await attendanceRepo.findAllByCompany(companyId, queryDate, employeeId, monthRange);
     return records.map((r) => withStatus(r));
   }
 

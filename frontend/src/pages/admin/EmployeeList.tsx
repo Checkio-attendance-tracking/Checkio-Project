@@ -1,14 +1,23 @@
-import React, { useEffect, useState } from 'react';
-import { Plus, Search, Shield, User as UserIcon, Pencil, UserX, ChevronDown, ChevronUp } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Plus, Search, Shield, User as UserIcon, Pencil, UserX, ChevronDown, ChevronUp, Download, FileSpreadsheet } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { format, parse } from 'date-fns';
 import { AttendanceDetail } from '../../components/AttendanceDetail';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { employeeService } from '../../services/employee';
+import { attendanceService } from '../../services/attendance';
 import type { User } from '../../types/user';
+import type { AttendanceRecord } from '../../types/attendance';
+import { extractApiMessage, toHumanError } from '../../utils/humanErrors';
+
+const PAGE_SIZE = 10;
 
 export function EmployeeList() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
+  const [showInactive, setShowInactive] = useState(false);
+  const [reportMonth, setReportMonth] = useState(format(new Date(), 'yyyy-MM'));
+  const [currentPage, setCurrentPage] = useState(1);
   const [expandedEmployeeId, setExpandedEmployeeId] = useState<string | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -17,6 +26,7 @@ export function EmployeeList() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     loadEmployees();
@@ -49,7 +59,7 @@ export function EmployeeList() {
       setEmployeeToDelete(null);
     } catch (error) {
       console.error('Error deleting employee:', error);
-      alert('Hubo un error al eliminar el trabajador');
+      alert(toHumanError(extractApiMessage(error), 'No se pudo dar de baja al trabajador.'));
     } finally {
       setIsDeleting(false);
     }
@@ -60,11 +70,145 @@ export function EmployeeList() {
     setDeleteModalOpen(true);
   };
 
-  const filteredUsers = users.filter(user => 
-    user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = useMemo(() => users.filter((user) => {
+    const matchesSearch =
+      user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = showInactive ? true : user.status === 'active';
+    return matchesSearch && matchesStatus;
+  }), [users, searchTerm, showInactive]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, showInactive, reportMonth]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / PAGE_SIZE));
+  const startIndex = (currentPage - 1) * PAGE_SIZE;
+  const paginatedUsers = filteredUsers.slice(startIndex, startIndex + PAGE_SIZE);
+
+  const parseHHMM = (value?: string) => {
+    if (!value) return undefined;
+    const [h, m] = value.split(':').map(Number);
+    if (Number.isNaN(h) || Number.isNaN(m)) return undefined;
+    return h * 60 + m;
+  };
+
+  const workedMinutes = (r: AttendanceRecord) => {
+    const checkIn = parseHHMM(r.checkIn);
+    const checkOut = parseHHMM(r.checkOut);
+    if (checkIn === undefined || checkOut === undefined || checkOut < checkIn) return 0;
+    let lunch = 0;
+    const lunchStart = parseHHMM(r.lunchStart);
+    const lunchEnd = parseHHMM(r.lunchEnd);
+    if (lunchStart !== undefined && lunchEnd !== undefined && lunchEnd >= lunchStart) {
+      lunch = Math.max(0, Math.min(checkOut, lunchEnd) - Math.max(checkIn, lunchStart));
+    }
+    return Math.max(0, (checkOut - checkIn) - lunch);
+  };
+
+  const formatDuration = (minutes: number) => `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+
+  const exportEmployee = async (user: User) => {
+    setIsExporting(true);
+    try {
+      const monthDate = parse(`${reportMonth}-01`, 'yyyy-MM-dd', new Date());
+      const rows = await attendanceService.getAll(monthDate, user.id);
+      const XLSX = await import('xlsx');
+      const records = rows.sort((a, b) => a.date.localeCompare(b.date));
+      const detailRows = records.map((r) => {
+        const worked = workedMinutes(r);
+        return {
+          Fecha: r.date,
+          Estado: r.status,
+          Ingreso: r.checkIn || '',
+          InicioAlmuerzo: r.lunchStart || '',
+          FinAlmuerzo: r.lunchEnd || '',
+          Salida: r.checkOut || '',
+          HorasDelDia: formatDuration(worked),
+          HorasExtra: formatDuration(r.overtimeMinutes || 0),
+        };
+      });
+      const totalWorked = records.reduce((sum, r) => sum + workedMinutes(r), 0);
+      const totalOvertime = records.reduce((sum, r) => sum + (r.overtimeMinutes || 0), 0);
+      const summaryRows = [{
+        Empleado: `${user.firstName} ${user.lastName}`,
+        Mes: reportMonth,
+        Dias: records.length,
+        HorasTotales: formatDuration(totalWorked),
+        HorasExtraTotales: formatDuration(totalOvertime),
+      }];
+
+      const wb = XLSX.utils.book_new();
+      const wsSummary = XLSX.utils.json_to_sheet(summaryRows);
+      const wsDetail = XLSX.utils.json_to_sheet(detailRows);
+      wsSummary['!cols'] = [{ wch: 26 }, { wch: 10 }, { wch: 8 }, { wch: 14 }, { wch: 18 }];
+      wsDetail['!cols'] = [{ wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 14 }, { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 12 }];
+      XLSX.utils.book_append_sheet(wb, wsSummary, 'Resumen');
+      XLSX.utils.book_append_sheet(wb, wsDetail, 'Detalle');
+      XLSX.writeFile(wb, `reporte_${user.firstName}_${user.lastName}_${reportMonth}.xlsx`);
+    } catch (error) {
+      console.error(error);
+      alert(toHumanError(extractApiMessage(error), 'No se pudo exportar el reporte del empleado.'));
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const exportAll = async () => {
+    setIsExporting(true);
+    try {
+      const monthDate = parse(`${reportMonth}-01`, 'yyyy-MM-dd', new Date());
+      const selected = filteredUsers;
+      const details: Array<Record<string, string | number>> = [];
+      const summary: Array<Record<string, string | number>> = [];
+
+      for (const user of selected) {
+        const rows = await attendanceService.getAll(monthDate, user.id);
+        const records = rows.sort((a, b) => a.date.localeCompare(b.date));
+        const totalWorked = records.reduce((sum, r) => sum + workedMinutes(r), 0);
+        const totalOvertime = records.reduce((sum, r) => sum + (r.overtimeMinutes || 0), 0);
+        summary.push({
+          Empleado: `${user.firstName} ${user.lastName}`,
+          Correo: user.email,
+          Puesto: user.department,
+          Mes: reportMonth,
+          Dias: records.length,
+          HorasTotales: formatDuration(totalWorked),
+          HorasExtraTotales: formatDuration(totalOvertime),
+        });
+        for (const r of records) {
+          details.push({
+            Empleado: `${user.firstName} ${user.lastName}`,
+            Correo: user.email,
+            Fecha: r.date,
+            Estado: r.status,
+            Ingreso: r.checkIn || '',
+            InicioAlmuerzo: r.lunchStart || '',
+            FinAlmuerzo: r.lunchEnd || '',
+            Salida: r.checkOut || '',
+            HorasDelDia: formatDuration(workedMinutes(r)),
+            HorasExtra: formatDuration(r.overtimeMinutes || 0),
+          });
+        }
+      }
+
+      const XLSX = await import('xlsx');
+      const wb = XLSX.utils.book_new();
+      const wsSummary = XLSX.utils.json_to_sheet(summary);
+      const wsDetail = XLSX.utils.json_to_sheet(details);
+      wsSummary['!cols'] = [{ wch: 24 }, { wch: 28 }, { wch: 20 }, { wch: 10 }, { wch: 8 }, { wch: 14 }, { wch: 18 }];
+      wsDetail['!cols'] = [{ wch: 24 }, { wch: 28 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 14 }, { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 12 }];
+      XLSX.utils.book_append_sheet(wb, wsSummary, 'ResumenPlantilla');
+      XLSX.utils.book_append_sheet(wb, wsDetail, 'DetallePlantilla');
+      XLSX.writeFile(wb, `reporte_plantilla_${reportMonth}.xlsx`);
+    } catch (error) {
+      console.error(error);
+      alert(toHumanError(extractApiMessage(error), 'No se pudo exportar la plantilla.'));
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   if (loading) {
     return <div className="p-8 text-center text-gray-500">Cargando personal...</div>;
@@ -88,7 +232,7 @@ export function EmployeeList() {
       </div>
 
       {/* Search and Filter Bar */}
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4">
+      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center gap-3">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
           <input
@@ -99,13 +243,37 @@ export function EmployeeList() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
+        <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+          <input
+            type="checkbox"
+            checked={showInactive}
+            onChange={(e) => setShowInactive(e.target.checked)}
+            className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+          />
+          Mostrar inactivos
+        </label>
+        <input
+          type="month"
+          value={reportMonth}
+          onChange={(e) => setReportMonth(e.target.value)}
+          className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+        <button
+          type="button"
+          onClick={exportAll}
+          disabled={isExporting || filteredUsers.length === 0}
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-indigo-600 text-white text-sm hover:bg-indigo-700 disabled:opacity-60"
+        >
+          <FileSpreadsheet size={16} />
+          Exportar Plantilla
+        </button>
       </div>
 
       {/* Employees Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="sm:hidden">
           <div className="divide-y divide-gray-100">
-            {filteredUsers.map((user) => {
+            {paginatedUsers.map((user) => {
               const isExpanded = expandedEmployeeId === user.id;
               return (
                 <div key={user.id} className="p-4">
@@ -141,6 +309,14 @@ export function EmployeeList() {
                           onClick={() => handleDeleteClick(user.id)}
                         >
                           <UserX size={18} />
+                        </button>
+                        <button
+                          type="button"
+                          className="text-emerald-600 hover:text-emerald-900 transition-colors p-2 rounded hover:bg-emerald-50"
+                          title="Exportar empleado"
+                          onClick={() => exportEmployee(user)}
+                        >
+                          <Download size={18} />
                         </button>
                         <span className="text-gray-400 p-2">
                           {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
@@ -189,7 +365,7 @@ export function EmployeeList() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {filteredUsers.map((user) => (
+              {paginatedUsers.map((user) => (
                 <React.Fragment key={user.id}>
                   <tr 
                     className={`hover:bg-gray-50 transition-colors cursor-pointer ${expandedEmployeeId === user.id ? 'bg-gray-50' : ''}`}
@@ -241,6 +417,13 @@ export function EmployeeList() {
                         >
                           <UserX size={18} />
                         </button>
+                        <button
+                          className="text-emerald-600 hover:text-emerald-900 transition-colors p-1 rounded hover:bg-emerald-50"
+                          title="Exportar empleado"
+                          onClick={() => exportEmployee(user)}
+                        >
+                          <Download size={18} />
+                        </button>
                         <button 
                           className="text-gray-400 hover:text-gray-600 transition-colors p-1"
                           onClick={(e) => {
@@ -273,13 +456,40 @@ export function EmployeeList() {
         )}
       </div>
 
+      {filteredUsers.length > 0 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-600">
+          <div>
+            Mostrando {startIndex + 1}-{Math.min(startIndex + PAGE_SIZE, filteredUsers.length)} de {filteredUsers.length}
+          </div>
+          <div className="inline-flex items-center gap-2">
+            <button
+              type="button"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              className="px-3 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-50"
+            >
+              Anterior
+            </button>
+            <span className="px-2">Página {currentPage} / {totalPages}</span>
+            <button
+              type="button"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              className="px-3 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-50"
+            >
+              Siguiente
+            </button>
+          </div>
+        </div>
+      )}
+
       <ConfirmDialog
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         onConfirm={confirmDelete}
-        title="Confirmar eliminación"
-        message="¿Estás de acuerdo con eliminar a este trabajador? Esta acción eliminará sus credenciales, registros de asistencia y no se puede deshacer."
-        confirmText="Eliminar trabajador"
+        title="Confirmar baja"
+        message="¿Deseas dar de baja a este trabajador? Se conservará su historial, pero su estado pasará a inactivo y no podrá iniciar sesión."
+        confirmText="Dar de baja"
         cancelText="Cancelar"
         type="danger"
         isLoading={isDeleting}

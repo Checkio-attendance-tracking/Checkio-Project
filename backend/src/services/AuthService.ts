@@ -36,6 +36,11 @@ export class AuthService {
       if (user.company.status !== "active") {
         throw new Error("Company is not active");
       }
+      if (user.role === "employee") {
+        if (!user.employee || user.employee.status !== "active") {
+          throw new Error("Employee is inactive");
+        }
+      }
     }
 
     const token = generateToken({

@@ -48,21 +48,30 @@ export class AttendanceRepository {
     });
   }
 
-  async findAllByEmployee(companyId: string, employeeId: string) {
+  async findAllByEmployee(companyId: string, employeeId: string, month?: { start: Date; end: Date }) {
     return prisma.attendance.findMany({
-      where: { companyId, employeeId },
+      where: {
+        companyId,
+        employeeId,
+        ...(month ? { date: { gte: month.start, lte: month.end } } : {}),
+      },
       include: { employee: true },
       orderBy: { date: 'desc' }
     });
   }
 
-  async findAllByCompany(companyId: string, date?: Date, employeeId?: string) {
+  async findAllByCompany(companyId: string, date?: Date, employeeId?: string, month?: { start: Date; end: Date }) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: any = { companyId };
     if (date) {
       where.date = {
         gte: startOfDay(date),
         lte: endOfDay(date)
+      };
+    } else if (month) {
+      where.date = {
+        gte: month.start,
+        lte: month.end
       };
     }
     if (employeeId) {

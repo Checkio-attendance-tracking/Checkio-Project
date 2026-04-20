@@ -1,6 +1,7 @@
 import { prisma } from "../config/database";
 import { Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { createAuditLog } from "../services/AuditLogService";
 
 function deserializeWorkSchedule(raw: unknown): unknown {
   if (!raw || typeof raw !== "string") return raw;
@@ -77,8 +78,9 @@ export class EmployeeRepository {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async update(companyId: string, id: string, data: any) {
+  async update(companyId: string, id: string, data: any, actorUserId?: string) {
     const { password, role, ...employeeData } = data;
+    const hasWorkScheduleInPayload = Object.prototype.hasOwnProperty.call(data || {}, "workSchedule");
     employeeData.workSchedule = serializeWorkSchedule(employeeData.workSchedule);
 
     // Ensure belongs to company
@@ -90,6 +92,19 @@ export class EmployeeRepository {
         where: { id },
         data: employeeData
       });
+
+      if (hasWorkScheduleInPayload && actorUserId) {
+        await createAuditLog(tx, {
+          companyId,
+          userId: actorUserId,
+          employeeId: employee.id,
+          action: "EMPLOYEE_WORK_SCHEDULE_UPDATED",
+          entity: "employee",
+          entityId: employee.id,
+          description: `Horario actualizado para ${employee.firstName} ${employee.lastName}`,
+          metadata: { employeeId: employee.id },
+        });
+      }
 
       // Update user if exists
       const user = await tx.user.findUnique({
@@ -131,25 +146,31 @@ export class EmployeeRepository {
     });
   }
 
-  async delete(companyId: string, id: string) {
+  async delete(companyId: string, id: string, actorUserId?: string) {
     const exists = await this.findById(companyId, id);
     if (!exists) throw new Error("Employee not found");
 
     return prisma.$transaction(async (tx) => {
-      // 1. Delete associated attendances
-      await tx.attendance.deleteMany({
-        where: { employeeId: id }
+      // Soft offboarding: preserve historical records and disable the employee.
+      const employee = await tx.employee.update({
+        where: { id },
+        data: { status: "inactive" }
       });
 
-      // 2. Delete associated user (credentials)
-      await tx.user.deleteMany({
-        where: { employeeId: id }
-      });
+      if (actorUserId) {
+        await createAuditLog(tx, {
+          companyId,
+          userId: actorUserId,
+          employeeId: employee.id,
+          action: "EMPLOYEE_OFFBOARDED",
+          entity: "employee",
+          entityId: employee.id,
+          description: `Baja de ${employee.firstName} ${employee.lastName}`,
+          metadata: { employeeId: employee.id, newStatus: "inactive" },
+        });
+      }
 
-      // 3. Delete employee
-      return tx.employee.delete({
-        where: { id }
-      });
+      return employee;
     });
   }
 }

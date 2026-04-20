@@ -170,3 +170,22 @@ model Notification {
   @@index([companyId, toUserId, readAt, createdAt])
   @@map("notifications")
 }
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  companyId   String
+  userId      String?
+  employeeId  String?
+  action      String
+  entity      String
+  entityId    String?
+  description String?
+  metadata    String?
+  createdAt   DateTime @default(now())
+
+  @@index([companyId, createdAt])
+  @@index([userId, createdAt])
+  @@index([employeeId, createdAt])
+  @@index([entity, entityId, createdAt])
+  @@map("audit_logs")
+}

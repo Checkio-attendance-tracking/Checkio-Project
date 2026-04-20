@@ -1,4 +1,5 @@
 import { prisma } from "../config/database";
+import { createAuditLog } from "./AuditLogService";
 
 type MarkType = "checkIn" | "lunchStart" | "lunchEnd" | "checkOut";
 
@@ -237,6 +238,23 @@ export class AttendanceCorrectionService {
         });
       }
 
+      await createAuditLog(tx, {
+        companyId,
+        userId: reviewerUserId,
+        employeeId: request.employeeId,
+        action: "ATTENDANCE_CORRECTION_APPROVED",
+        entity: "attendance_correction_request",
+        entityId: reviewed.id,
+        description: `Corrección aprobada (${markLabel(mark)})`,
+        metadata: {
+          requestId: reviewed.id,
+          attendanceId: attendance.id,
+          markType: mark,
+          previousTimeApplied: reviewed.previousTimeApplied,
+          requestedTime: reviewed.requestedTime,
+        },
+      });
+
       return reviewed;
     });
   }
@@ -290,6 +308,22 @@ export class AttendanceCorrectionService {
           },
         });
       }
+
+      await createAuditLog(tx, {
+        companyId,
+        userId: reviewerUserId,
+        employeeId: request.employeeId,
+        action: "ATTENDANCE_CORRECTION_REJECTED",
+        entity: "attendance_correction_request",
+        entityId: reviewed.id,
+        description: `Corrección rechazada (${markLabel(request.markType as MarkType)})`,
+        metadata: {
+          requestId: reviewed.id,
+          attendanceId: attendance.id,
+          markType: request.markType,
+          reviewComment: comment || null,
+        },
+      });
 
       return reviewed;
     });

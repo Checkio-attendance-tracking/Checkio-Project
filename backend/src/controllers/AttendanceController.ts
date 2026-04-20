@@ -88,7 +88,8 @@ export class AttendanceController {
         return;
       }
 
-      const history = await attendanceService.getMyHistory(req.user!.companyId as string, employeeId);
+      const { month } = req.query;
+      const history = await attendanceService.getMyHistory(req.user!.companyId as string, employeeId, month as string | undefined);
       res.json(history.map(stripAttendanceSensitiveFields));
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
@@ -98,8 +99,13 @@ export class AttendanceController {
 
   async getAll(req: Request, res: Response) {
     try {
-      const { date, employeeId } = req.query;
-      const records = await attendanceService.getAll(req.user!.companyId as string, date as string, employeeId as string);
+      const { date, employeeId, month } = req.query;
+      const records = await attendanceService.getAll(
+        req.user!.companyId as string,
+        date as string,
+        employeeId as string,
+        month as string | undefined
+      );
       res.json(records);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {

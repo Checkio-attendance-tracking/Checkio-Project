@@ -3,6 +3,7 @@ import { ArrowLeft, Save, User, Mail, Lock, Calendar, Building, MapPin, Briefcas
 import { useNavigate, useParams } from 'react-router-dom';
 import { employeeService } from '../../services/employee';
 import type { WorkDayKey, WorkSchedule } from '../../types/user';
+import { extractApiMessage, toHumanError } from '../../utils/humanErrors';
 
 const getDefaultWorkSchedule = (): WorkSchedule => ({
   timezone: 'America/Lima',
@@ -27,6 +28,20 @@ const dayLabels: Record<WorkDayKey, string> = {
   sat: 'Sáb',
   sun: 'Dom',
 };
+
+function normalizeDateInput(value: unknown): string {
+  if (!value) return '';
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return '';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+    if (trimmed.includes('T')) return trimmed.slice(0, 10);
+    const d = new Date(trimmed);
+    return Number.isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10);
+  }
+  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  return '';
+}
 
 export function CreateEmployee() {
   const navigate = useNavigate();
@@ -66,10 +81,10 @@ export function CreateEmployee() {
           password: '',
           firstName: user.firstName,
           lastName: user.lastName,
-          birthDate: user.birthDate || '',
+          birthDate: normalizeDateInput(user.birthDate),
           businessName: user.businessName || '',
           workplace: user.workplace || '',
-          joinDate: user.joinDate,
+          joinDate: normalizeDateInput(user.joinDate),
           department: user.department,
           role: user.role as 'admin' | 'employee',
           workSchedule: user.workSchedule || getDefaultWorkSchedule(),
@@ -119,14 +134,19 @@ export function CreateEmployee() {
     e.preventDefault();
     try {
       if (isEditing && id) {
-        // Only send password if it's not empty
         const dataToUpdate = { ...formData };
         if (!dataToUpdate.password) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           delete (dataToUpdate as any).password;
         }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        delete (dataToUpdate as any).workSchedule;
+        if (!dataToUpdate.joinDate) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          delete (dataToUpdate as any).joinDate;
+        }
+        if (!dataToUpdate.birthDate) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          delete (dataToUpdate as any).birthDate;
+        }
         await employeeService.update(id, dataToUpdate);
         alert('Empleado actualizado exitosamente');
       } else {
@@ -140,7 +160,7 @@ export function CreateEmployee() {
       navigate('/admin/employees');
     } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
       console.error(error);
-      alert(error.response?.data?.message || 'Error al guardar empleado');
+      alert(toHumanError(extractApiMessage(error), 'Error al guardar empleado'));
     }
   };
 
@@ -254,7 +274,7 @@ export function CreateEmployee() {
                   <input
                     type="date"
                     name="birthDate"
-                    required
+                    required={!isEditing}
                     value={formData.birthDate}
                     onChange={handleChange}
                     className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
@@ -312,7 +332,7 @@ export function CreateEmployee() {
                   <input
                     type="date"
                     name="joinDate"
-                    required
+                    required={!isEditing}
                     value={formData.joinDate}
                     onChange={handleChange}
                     className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
@@ -341,36 +361,29 @@ export function CreateEmployee() {
               Horario y Días de Trabajo
             </h3>
 
-              {isEditing && (
-                <div className="mb-4 px-4 py-3 bg-yellow-50 border border-yellow-100 text-yellow-800 rounded-lg text-sm">
-                  El horario no se puede modificar libremente. Solo RRHH puede aplicar cambios cuando existe una solicitud aprobada.
-                </div>
-              )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700 block">Zona Horaria</label>
                 <input
-                  type="text"
-                  value={formData.workSchedule.timezone || ''}
-                  onChange={(e) => updateSchedule({ timezone: e.target.value })}
-                    disabled={isEditing}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                  placeholder="America/Lima"
-                />
+                    type="text"
+                    value={formData.workSchedule.timezone || ''}
+                    onChange={(e) => updateSchedule({ timezone: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                    placeholder="America/Lima"
+                  />
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700 block">Tolerancia (min)</label>
                 <input
-                  type="number"
-                  min={0}
-                  max={240}
-                  value={formData.workSchedule.graceMinutes ?? 0}
-                  onChange={(e) => updateSchedule({ graceMinutes: Number(e.target.value) })}
-                    disabled={isEditing}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
-                />
+                    type="number"
+                    min={0}
+                    max={240}
+                    value={formData.workSchedule.graceMinutes ?? 0}
+                    onChange={(e) => updateSchedule({ graceMinutes: Number(e.target.value) })}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                  />
               </div>
             </div>
 
@@ -395,13 +408,12 @@ export function CreateEmployee() {
                             type="checkbox"
                             checked={d.enabled}
                             onChange={(e) => updateScheduleDay(day, { enabled: e.target.checked })}
-                            disabled={isEditing}
                           />
                         </td>
                         <td className="px-4 py-3">
                           <input
                             type="time"
-                            disabled={isEditing || !d.enabled}
+                            disabled={!d.enabled}
                             value={d.start || ''}
                             onChange={(e) => updateScheduleDay(day, { start: e.target.value })}
                             className="px-2 py-1 border border-gray-200 rounded-md disabled:bg-gray-100"
@@ -410,7 +422,7 @@ export function CreateEmployee() {
                         <td className="px-4 py-3">
                           <input
                             type="time"
-                            disabled={isEditing || !d.enabled}
+                            disabled={!d.enabled}
                             value={d.end || ''}
                             onChange={(e) => updateScheduleDay(day, { end: e.target.value })}
                             className="px-2 py-1 border border-gray-200 rounded-md disabled:bg-gray-100"

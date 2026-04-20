@@ -5,7 +5,7 @@ export class UserRepository {
   async findByEmail(email: string) {
     const normalized = email.trim();
     return prisma.user.findFirst({
-      where: { email: { equals: normalized, mode: "insensitive" } },
+      where: { email: normalized },
       include: { company: true, employee: true }
     });
   }

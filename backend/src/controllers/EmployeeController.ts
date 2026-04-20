@@ -30,7 +30,12 @@ export class EmployeeController {
     try {
       const { id } = req.params;
       const validatedData = updateEmployeeSchema.parse(req.body);
-      const employee = await employeeService.update(req.user!.companyId as string, id as string, validatedData);
+      const employee = await employeeService.update(
+        req.user!.companyId as string,
+        id as string,
+        validatedData,
+        req.user?.userId
+      );
       res.json(employee);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
@@ -41,7 +46,7 @@ export class EmployeeController {
   async delete(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      await employeeService.delete(req.user!.companyId as string, id as string);
+      await employeeService.delete(req.user!.companyId as string, id as string, req.user?.userId);
       res.status(204).send();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
