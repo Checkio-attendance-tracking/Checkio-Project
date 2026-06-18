@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
@@ -18,6 +18,10 @@ import { CreateCompanyUser } from './pages/superadmin/CreateCompanyUser';
 import { authService } from './services/auth';
 import type { User } from './types/user';
 
+const Landing = lazy(() =>
+  import('./pages/Landing').then((module) => ({ default: module.Landing }))
+);
+
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -26,6 +30,11 @@ function App() {
     let cancelled = false;
 
     const checkAuth = async () => {
+      if (window.location.pathname === '/landing') {
+        setLoading(false);
+        return;
+      }
+
       const token = localStorage.getItem('token');
       if (!token) {
         setLoading(false);
@@ -88,12 +97,21 @@ function App() {
 
   const getHomeRoute = (user: User) => {
     if (user.role === 'superadmin') return '/superadmin/companies';
+    if (user.role === 'admin') return '/admin';
     return '/dashboard';
   };
 
   return (
     <BrowserRouter>
       <Routes>
+        <Route
+          path="/landing"
+          element={
+            <Suspense fallback={<div className="min-h-screen bg-[#fcfbf7]" aria-label="Cargando landing" />}>
+              <Landing />
+            </Suspense>
+          }
+        />
         <Route path="/" element={!user ? <Login onLogin={setUser} /> : <Navigate to={getHomeRoute(user)} replace />} />
         
         <Route path="/dashboard" element={user && user.role !== 'superadmin' ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/" replace />} />
