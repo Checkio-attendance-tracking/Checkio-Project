@@ -17,18 +17,33 @@ export function CtaSection() {
               <h2 className="mt-5 text-3xl font-semibold tracking-[-0.04em] sm:text-4xl lg:text-5xl">
                 Menos conciliación manual. Más contexto para decidir.
               </h2>
-              <p className="mt-5 max-w-2xl text-base leading-7 text-indigo-100 sm:text-lg">
-                Revisa la experiencia actual de Checkio ingresando al sistema desde el flujo existente.
+              <p className="mt-5 mb-8 max-w-2xl text-base leading-7 text-indigo-100 sm:text-lg">
+                Agenda una demostración personalizada para ver cómo Checkio puede adaptarse a la operación de tu empresa.
               </p>
+              <a
+                href="mailto:contact.orbitalframeworks@gmail.com?subject=Demo%20Checkio%20-%20Solicitud%20de%20informaci%C3%B3n"
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-white px-6 text-sm font-semibold text-indigo-700 shadow-sm transition-colors hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-600 sm:w-fit"
+              >
+                Hablar con Orbital Frameworks
+                <ArrowRight aria-hidden="true" size={17} />
+              </a>
             </div>
 
-            <a
-              href="/"
-              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-white px-5 text-sm font-semibold text-indigo-700 shadow-sm transition-colors hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-indigo-600 sm:w-fit"
-            >
-              Ingresar a Checkio
-              <ArrowRight aria-hidden="true" size={17} />
-            </a>
+            <div className="flex flex-col lg:items-end">
+              <div className="flex flex-col gap-3 rounded-xl bg-indigo-700/40 p-4 text-sm text-indigo-100 backdrop-blur-sm lg:max-w-sm">
+                <p>
+                  <strong>Checkio</strong> es desarrollado por <strong>Orbital Frameworks</strong>. Construimos soluciones digitales para operaciones, control y crecimiento empresarial.
+                </p>
+                <div className="flex flex-col gap-2 font-medium sm:flex-row sm:gap-4">
+                  <a href="https://orbitalframeworks.qzz.io/" target="_blank" rel="noreferrer" className="transition-colors hover:text-white">
+                    Visitar web oficial →
+                  </a>
+                  <a href="https://www.instagram.com/orbitalframeworkspe/" target="_blank" rel="noreferrer" className="transition-colors hover:text-white">
+                    Instagram @orbitalframeworkspe →
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
