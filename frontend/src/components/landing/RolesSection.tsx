@@ -48,7 +48,12 @@ export function RolesSection() {
                 <div className={`flex h-11 w-11 items-center justify-center rounded-lg ${index === 1 ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700'}`}>
                   <Icon aria-hidden="true" size={22} />
                 </div>
-                <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">{label}</span>
+                <div className="inline-flex items-center gap-4">
+                  <span className={`h-px w-6 sm:w-10 ${index === 1 ? 'bg-indigo-400/70' : 'bg-slate-300'}`} aria-hidden="true" />
+                  <span className={`text-[13px] font-bold uppercase tracking-[0.12em] md:text-sm ${index === 1 ? 'text-indigo-600' : 'text-slate-500'}`}>
+                    {label}
+                  </span>
+                </div>
               </div>
               <h3 className="mt-8 text-xl font-semibold text-slate-950">{title}</h3>
               <ul className="mt-5 space-y-3">

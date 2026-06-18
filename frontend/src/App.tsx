@@ -21,6 +21,12 @@ import type { User } from './types/user';
 const Landing = lazy(() =>
   import('./pages/Landing').then((module) => ({ default: module.Landing }))
 );
+const PrivacyPolicy = lazy(() =>
+  import('./pages/PrivacyPolicy').then((module) => ({ default: module.PrivacyPolicy }))
+);
+const TermsOfService = lazy(() =>
+  import('./pages/TermsOfService').then((module) => ({ default: module.TermsOfService }))
+);
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -30,7 +36,11 @@ function App() {
     let cancelled = false;
 
     const checkAuth = async () => {
-      if (window.location.pathname === '/landing') {
+      if (
+        window.location.pathname === '/landing' ||
+        window.location.pathname === '/privacy' ||
+        window.location.pathname === '/terms'
+      ) {
         setLoading(false);
         return;
       }
@@ -109,6 +119,22 @@ function App() {
           element={
             <Suspense fallback={<div className="min-h-screen bg-[#fcfbf7]" aria-label="Cargando landing" />}>
               <Landing />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/privacy"
+          element={
+            <Suspense fallback={<div className="min-h-screen bg-[#fcfbf7]" aria-label="Cargando privacidad" />}>
+              <PrivacyPolicy />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/terms"
+          element={
+            <Suspense fallback={<div className="min-h-screen bg-[#fcfbf7]" aria-label="Cargando terminos" />}>
+              <TermsOfService />
             </Suspense>
           }
         />

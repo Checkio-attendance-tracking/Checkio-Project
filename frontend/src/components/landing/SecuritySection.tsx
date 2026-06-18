@@ -1,4 +1,4 @@
-import { CheckCircle2, KeyRound, MapPinCheck, ShieldCheck } from 'lucide-react';
+import { KeyRound, MapPinCheck, ShieldCheck } from 'lucide-react';
 import { SectionHeading } from './SectionHeading';
 
 const safeguards = [
@@ -42,16 +42,18 @@ export function SecuritySection() {
           ))}
         </div>
 
-        <div className="mt-6 flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-6 flex flex-col gap-4 rounded-xl border border-slate-200 bg-indigo-50/50 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
-            <CheckCircle2 aria-hidden="true" className="mt-0.5 shrink-0 text-cyan-700" size={20} />
+            <ShieldCheck aria-hidden="true" className="mt-0.5 shrink-0 text-indigo-600" size={20} />
             <div>
-              <p className="text-sm font-semibold text-slate-950">Principio de mínima exposición</p>
-              <p className="mt-1 text-sm leading-6 text-slate-600">La landing no muestra datos de clientes, identificadores internos ni información operativa sensible.</p>
+              <p className="text-sm font-semibold text-slate-950">Nota de privacidad</p>
+              <p className="mt-1 text-sm leading-6 text-slate-600">
+                Checkio registra ubicación únicamente durante el proceso de marcación. No realiza rastreo continuo en segundo plano. Los datos de asistencia, ubicación y dispositivo se usan para validar registros laborales y brindar trazabilidad a la empresa administradora.
+              </p>
             </div>
           </div>
-          <a href="#geocerca" className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-            Ver uso de ubicación
+          <a href="/privacy" className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+            Ver política de privacidad
           </a>
         </div>
       </div>

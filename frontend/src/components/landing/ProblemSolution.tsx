@@ -56,7 +56,14 @@ export function SolutionSection() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid gap-12 lg:grid-cols-[0.7fr_1.3fr]">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-300">La solución</p>
+            <div className="mb-4 flex justify-start">
+              <div className="inline-flex items-center gap-4">
+                <span className="h-px w-6 bg-cyan-300/70 sm:w-10" aria-hidden="true" />
+                <p className="text-[13px] font-bold uppercase tracking-[0.12em] text-cyan-300 md:text-sm">
+                  La solución
+                </p>
+              </div>
+            </div>
             <h2 className="mt-4 text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">
               Un flujo, desde la marcación hasta la revisión.
             </h2>

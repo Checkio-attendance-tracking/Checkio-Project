@@ -30,9 +30,9 @@ export function LandingFooter() {
             <p className="text-slate-400">Checkio registra ubicación únicamente durante el proceso de marcación. No realiza rastreo continuo en segundo plano.</p>
           </div>
           <div className="flex gap-4">
-            <a href="#" className="hover:text-slate-900 transition-colors">Privacidad</a>
-            <a href="#" className="hover:text-slate-900 transition-colors">Términos</a>
-            <a href="#" className="hover:text-slate-900 transition-colors">Contacto</a>
+            <a href="/privacy" className="hover:text-slate-900 transition-colors">Privacidad</a>
+            <a href="/terms" className="hover:text-slate-900 transition-colors">Términos</a>
+            <a href="mailto:soporte@checkio.pe" className="hover:text-slate-900 transition-colors">Contacto</a>
           </div>
         </div>
       </div>

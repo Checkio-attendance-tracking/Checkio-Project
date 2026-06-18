@@ -4,6 +4,10 @@ import { SectionHeading } from './SectionHeading';
 
 const faqs = [
   {
+    question: '¿Qué datos registra Checkio?',
+    answer: 'Checkio puede registrar datos de asistencia, hora, ubicación puntual al marcar, IP, navegador/dispositivo y solicitudes de corrección. La ubicación no se rastrea de forma continua.',
+  },
+  {
     question: '¿Checkio rastrea la ubicación todo el tiempo?',
     answer: 'No. Checkio solo captura la ubicación exacta en el momento en que el empleado presiona el botón de marcar asistencia. No realizamos seguimiento en segundo plano ni fuera de su horario.',
   },
