@@ -24,7 +24,10 @@ export function LandingNav() {
         >
           <a href="/landing" className="flex min-h-11 items-center gap-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
             <Logo size={36} />
-            <span className="text-lg font-bold tracking-tight text-slate-950">Checkio</span>
+            <div className="flex flex-col">
+              <span className="text-lg font-bold leading-tight tracking-tight text-slate-950">Checkio</span>
+              <span className="mt-0.5 text-[10px] font-bold uppercase leading-none tracking-widest text-slate-400">by Orbital Frameworks</span>
+            </div>
           </a>
 
           <div className="hidden items-center gap-7 md:flex">
@@ -40,10 +43,10 @@ export function LandingNav() {
           </div>
 
           <a
-            href="/"
+            href="mailto:contact.orbitalframeworks@gmail.com?subject=Demo%20Checkio%20-%20Solicitud%20de%20informaci%C3%B3n"
             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
           >
-            Ingresar
+            Solicitar demo
             <ArrowRight aria-hidden="true" size={16} />
           </a>
         </nav>

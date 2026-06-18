@@ -4,35 +4,60 @@ import { Logo } from '../Logo';
 export function LandingFooter() {
   return (
     <footer className="border-t border-slate-200 bg-[#fcfbf7]">
-      <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-10 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
-        <div className="flex items-center gap-3">
-          <Logo size={34} />
-          <div>
-            <p className="font-semibold text-slate-950">Checkio</p>
-            <p className="mt-0.5 text-xs text-slate-500">Sistema de control de asistencia</p>
+      <div className="mx-auto grid max-w-7xl gap-12 px-4 py-12 sm:px-6 lg:grid-cols-[2fr_1fr_1fr] lg:px-8 lg:py-16">
+        <div>
+          <div className="flex items-center gap-3">
+            <Logo size={34} />
+            <div>
+              <p className="font-semibold text-slate-950">Checkio</p>
+              <p className="mt-0.5 text-[10px] font-bold uppercase tracking-widest text-slate-400">by Orbital Frameworks</p>
+            </div>
           </div>
+          <p className="mt-6 max-w-xs text-sm leading-6 text-slate-500">
+            Checkio registra ubicación únicamente durante el proceso de marcación. No realiza rastreo continuo en segundo plano.
+          </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-slate-600">
-          <a href="#solucion" className="min-h-11 content-center transition-colors hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500">Solución</a>
-          <a href="#seguridad" className="min-h-11 content-center transition-colors hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500">Seguridad</a>
-          <a href="#faq" className="min-h-11 content-center transition-colors hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500">Preguntas Frecuentes</a>
-          <a href="/" className="inline-flex min-h-11 items-center gap-1.5 font-semibold text-indigo-700 transition-colors hover:text-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            Ingresar
-            <ArrowUpRight aria-hidden="true" size={15} />
-          </a>
+        <div>
+          <h3 className="text-sm font-semibold text-slate-950">Producto</h3>
+          <ul className="mt-4 space-y-3 text-sm text-slate-600">
+            <li><a href="#solucion" className="transition-colors hover:text-slate-950">Solución</a></li>
+            <li><a href="#seguridad" className="transition-colors hover:text-slate-950">Seguridad</a></li>
+            <li><a href="#faq" className="transition-colors hover:text-slate-950">Preguntas Frecuentes</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 className="text-sm font-semibold text-slate-950">Orbital Frameworks</h3>
+          <p className="mt-2 pr-4 text-[13px] leading-5 text-slate-500">Soluciones digitales para operaciones y crecimiento empresarial.</p>
+          <ul className="mt-4 space-y-3 text-sm text-slate-600">
+            <li>
+              <a href="https://orbitalframeworks.qzz.io/" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 transition-colors hover:text-slate-950">
+                Web oficial
+                <ArrowUpRight aria-hidden="true" size={14} />
+              </a>
+            </li>
+            <li>
+              <a href="https://www.instagram.com/orbitalframeworkspe/" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 transition-colors hover:text-slate-950">
+                Instagram
+                <ArrowUpRight aria-hidden="true" size={14} />
+              </a>
+            </li>
+            <li>
+              <a href="mailto:contact.orbitalframeworks@gmail.com?subject=Demo%20Checkio%20-%20Solicitud%20de%20informaci%C3%B3n" className="transition-colors hover:text-slate-950">
+                Contacto comercial
+              </a>
+            </li>
+          </ul>
         </div>
       </div>
+      
       <div className="border-t border-slate-200">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-1">
-            <p>© {new Date().getFullYear()} Checkio. Todos los derechos reservados.</p>
-            <p className="text-slate-400">Checkio registra ubicación únicamente durante el proceso de marcación. No realiza rastreo continuo en segundo plano.</p>
-          </div>
+          <p>© {new Date().getFullYear()} Checkio. Todos los derechos reservados. Desarrollado por Orbital Frameworks.</p>
           <div className="flex gap-4">
-            <a href="/privacy" className="hover:text-slate-900 transition-colors">Privacidad</a>
-            <a href="/terms" className="hover:text-slate-900 transition-colors">Términos</a>
-            <a href="mailto:soporte@checkio.pe" className="hover:text-slate-900 transition-colors">Contacto</a>
+            <a href="/privacy" className="transition-colors hover:text-slate-900">Privacidad</a>
+            <a href="/terms" className="transition-colors hover:text-slate-900">Términos</a>
           </div>
         </div>
       </div>

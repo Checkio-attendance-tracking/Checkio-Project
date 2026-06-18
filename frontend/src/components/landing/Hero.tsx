@@ -37,10 +37,10 @@ export function Hero() {
               <ArrowDown aria-hidden="true" size={17} />
             </a>
             <a
-              href="/"
+              href="mailto:contact.orbitalframeworks@gmail.com?subject=Demo%20Checkio%20-%20Solicitud%20de%20informaci%C3%B3n"
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-800 transition-colors hover:border-slate-400 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
             >
-              Ingresar al sistema
+              Agendar demo
               <ArrowRight aria-hidden="true" size={17} />
             </a>
           </div>
