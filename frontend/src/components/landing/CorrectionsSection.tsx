@@ -10,10 +10,44 @@ const steps = [
 ];
 
 export function CorrectionsSection() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  
+  const scrollTargetRef = useRef<HTMLDivElement>(null);
+  const firstCircleRef = useRef<HTMLDivElement>(null);
+  const lastCircleRef = useRef<HTMLDivElement>(null);
+  const timelineWrapperRef = useRef<HTMLDivElement>(null);
+
+  const [lineMetrics, setLineMetrics] = useState({ top: 0, height: 0 });
+
+  useEffect(() => {
+    const updateMetrics = () => {
+      if (firstCircleRef.current && lastCircleRef.current && timelineWrapperRef.current) {
+        const wrapperRect = timelineWrapperRef.current.getBoundingClientRect();
+        const firstRect = firstCircleRef.current.getBoundingClientRect();
+        const lastRect = lastCircleRef.current.getBoundingClientRect();
+
+        const top = firstRect.top - wrapperRect.top + firstRect.height / 2;
+        const bottom = lastRect.top - wrapperRect.top + lastRect.height / 2;
+        
+        setLineMetrics({ top, height: bottom - top });
+      }
+    };
+    
+    updateMetrics();
+    
+    // Usamos ResizeObserver para calcular el tamaño incluso si hay reflows por web fonts o imágenes
+    const observer = new ResizeObserver(updateMetrics);
+    if (timelineWrapperRef.current) {
+      observer.observe(timelineWrapperRef.current);
+    }
+    window.addEventListener('resize', updateMetrics);
+    
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', updateMetrics);
+    };
+  }, []);
+
   const { scrollYProgress } = useScroll({
-    target: containerRef,
+    target: scrollTargetRef,
     offset: ["start 60%", "end 60%"]
   });
 
@@ -22,9 +56,10 @@ export function CorrectionsSection() {
 
   useEffect(() => {
     const unsubscribe = scrollYProgress.on("change", (latest) => {
-      if (latest > 0.65 && !isResolved) {
+      // Usamos 0.99 para evitar problemas de precisión en decimales cuando la barra llega a 100%
+      if (latest > 0.99 && !isResolved) {
         setIsResolved(true);
-      } else if (latest <= 0.65 && isResolved) {
+      } else if (latest <= 0.99 && isResolved) {
         setIsResolved(false);
       }
     });
@@ -32,7 +67,7 @@ export function CorrectionsSection() {
   }, [scrollYProgress, isResolved]);
 
   return (
-    <div className="border-t border-slate-200/60 py-24 sm:py-32" ref={containerRef}>
+    <div className="border-t border-slate-200/60 py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid gap-16 lg:grid-cols-[1fr_1fr] lg:items-start">
           
@@ -120,17 +155,32 @@ export function CorrectionsSection() {
           </div>
 
           {/* Right Column: Timeline */}
-          <div className="relative pl-8 md:pl-12 lg:pl-16 lg:py-16 pb-12 lg:pb-32">
-            <div className="absolute left-[11px] lg:left-[27px] top-2 lg:top-16 bottom-2 lg:bottom-32 w-[2px] bg-slate-100" />
+          <div className="relative pl-8 md:pl-12 lg:pl-16 lg:py-16 pb-12 lg:pb-32" ref={timelineWrapperRef}>
+            
+            {/* Tracker invisible que delimita exactamente el inicio y fin de la línea */}
+            <div 
+               ref={scrollTargetRef} 
+               className="absolute left-[11px] lg:left-[27px] w-[2px] opacity-0 pointer-events-none" 
+               style={{ top: lineMetrics.top, height: lineMetrics.height }} 
+            />
+            {/* Background Line (Mide exactamente de centro a centro) */}
+            <div 
+              className="absolute left-[11px] lg:left-[27px] w-[2px] bg-slate-100" 
+              style={{ top: lineMetrics.top, height: lineMetrics.height }}
+            />
+            {/* Animated Progress Line */}
             <motion.div 
-              className="absolute left-[11px] lg:left-[27px] top-2 lg:top-16 bottom-2 lg:bottom-32 w-[2px] bg-indigo-500 origin-top"
-              style={{ scaleY: lineHeight }}
+              className="absolute left-[11px] lg:left-[27px] w-[2px] bg-indigo-500 origin-top"
+              style={{ top: lineMetrics.top, height: lineMetrics.height, scaleY: lineHeight }}
             />
             
             <ol className="space-y-24">
-              {steps.map((step) => (
+              {steps.map((step, index) => (
                 <li key={step.number} className="relative">
-                  <div className="absolute -left-8 lg:-left-12 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-indigo-50 ring-4 ring-white md:-left-12 lg:-left-[54px]">
+                  <div 
+                    ref={index === 0 ? firstCircleRef : index === steps.length - 1 ? lastCircleRef : null}
+                    className="absolute -left-8 lg:-left-12 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-indigo-50 ring-4 ring-white md:-left-12 lg:-left-[54px]"
+                  >
                     <div className="h-2 w-2 rounded-full bg-indigo-600" />
                   </div>
                   <span className="font-mono text-xs font-bold tracking-widest text-indigo-600">{step.number}</span>
