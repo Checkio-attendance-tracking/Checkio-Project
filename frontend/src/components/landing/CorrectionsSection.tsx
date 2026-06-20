@@ -15,7 +15,7 @@ export function CorrectionsSection() {
   const lastCircleRef = useRef<HTMLDivElement>(null);
   const timelineWrapperRef = useRef<HTMLDivElement>(null);
 
-  const [lineMetrics, setLineMetrics] = useState({ top: 0, height: 0 });
+  const [lineMetrics, setLineMetrics] = useState({ top: 0, height: 0, left: 0 });
 
   useEffect(() => {
     const updateMetrics = () => {
@@ -26,8 +26,10 @@ export function CorrectionsSection() {
 
         const top = firstRect.top - wrapperRect.top + firstRect.height / 2;
         const bottom = lastRect.top - wrapperRect.top + lastRect.height / 2;
+        // Restamos 1px al final para centrar exactamente la línea que tiene 2px de ancho
+        const left = firstRect.left - wrapperRect.left + firstRect.width / 2 - 1;
         
-        setLineMetrics({ top, height: bottom - top });
+        setLineMetrics({ top, height: bottom - top, left });
       }
     };
     
@@ -160,18 +162,18 @@ export function CorrectionsSection() {
             {/* Tracker invisible que delimita exactamente el inicio y fin de la línea */}
             <div 
                ref={scrollTargetRef} 
-               className="absolute left-[11px] lg:left-[27px] w-[2px] opacity-0 pointer-events-none" 
-               style={{ top: lineMetrics.top, height: lineMetrics.height }} 
+               className="absolute w-[2px] opacity-0 pointer-events-none" 
+               style={{ top: lineMetrics.top, left: lineMetrics.left, height: lineMetrics.height }} 
             />
             {/* Background Line (Mide exactamente de centro a centro) */}
             <div 
-              className="absolute left-[11px] lg:left-[27px] w-[2px] bg-slate-100" 
-              style={{ top: lineMetrics.top, height: lineMetrics.height }}
+              className="absolute w-[2px] bg-slate-100" 
+              style={{ top: lineMetrics.top, left: lineMetrics.left, height: lineMetrics.height }}
             />
             {/* Animated Progress Line */}
             <motion.div 
-              className="absolute left-[11px] lg:left-[27px] w-[2px] bg-indigo-500 origin-top"
-              style={{ top: lineMetrics.top, height: lineMetrics.height, scaleY: lineHeight }}
+              className="absolute w-[2px] bg-indigo-500 origin-top"
+              style={{ top: lineMetrics.top, left: lineMetrics.left, height: lineMetrics.height, scaleY: lineHeight }}
             />
             
             <ol className="space-y-24">
@@ -179,11 +181,11 @@ export function CorrectionsSection() {
                 <li key={step.number} className="relative">
                   <div 
                     ref={index === 0 ? firstCircleRef : index === steps.length - 1 ? lastCircleRef : null}
-                    className="absolute -left-8 lg:-left-12 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-indigo-50 ring-4 ring-white md:-left-12 lg:-left-[54px]"
+                    className="absolute -left-8 lg:-left-12 top-[26px] flex h-6 w-6 items-center justify-center rounded-full bg-indigo-50 ring-4 ring-white md:-left-12 lg:-left-[54px]"
                   >
                     <div className="h-2 w-2 rounded-full bg-indigo-600" />
                   </div>
-                  <span className="font-mono text-xs font-bold tracking-widest text-indigo-600">{step.number}</span>
+                  <span className="block font-mono text-xs font-bold tracking-widest text-indigo-600">{step.number}</span>
                   <h3 className="mt-2 text-xl font-bold tracking-tight text-slate-900">{step.title}</h3>
                   <p className="mt-2 text-base leading-relaxed text-slate-600">{step.text}</p>
                 </li>
