@@ -1,4 +1,4 @@
-import { Building2, CheckCircle2, ClipboardCheck, LayoutDashboard, UserRound } from 'lucide-react';
+import { CheckCircle2, ClipboardCheck, LayoutDashboard, UserRound } from 'lucide-react';
 import { SectionHeading } from './SectionHeading';
 import { motion } from 'framer-motion';
 
