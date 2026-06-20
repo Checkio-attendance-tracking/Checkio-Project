@@ -102,16 +102,16 @@ export function ProblemSolution() {
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 0 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
+              exit={{ opacity: 0, y: 0 }}
               transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
               className="grid gap-6 sm:grid-cols-3"
             >
               {content[activeTab].map(({ icon: Icon, title, text, color, bg, border }, index) => (
                 <motion.article 
                   key={title}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 0 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: index * 0.1, ease: [0.4, 0, 0.2, 1] }}
                   className={`group overflow-hidden rounded-3xl border ${border} ${bg} p-8 backdrop-blur-sm transition-all hover:shadow-md hover:bg-white/90`}

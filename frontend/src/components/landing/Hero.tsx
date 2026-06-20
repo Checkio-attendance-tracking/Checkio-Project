@@ -1,5 +1,5 @@
 import { ArrowDown, ArrowRight, CheckCircle2, Clock3, MapPin } from 'lucide-react';
-import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { useEffect } from 'react';
 
 const proofPoints = [
@@ -24,8 +24,8 @@ export function Hero() {
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, [mouseX, mouseY]);
 
-  const rotateX = useTransform(useSpring(mouseY, { stiffness: 70, damping: 30 }), [-1, 1], [15, -5]);
-  const rotateY = useTransform(useSpring(mouseX, { stiffness: 70, damping: 30 }), [-1, 1], [-25, -5]);
+  const rotateX = useTransform(mouseY, [-1, 1], [15, -5]);
+  const rotateY = useTransform(mouseX, [-1, 1], [-25, -5]);
 
   return (
     <div className="relative overflow-hidden border-b border-slate-200">
@@ -36,7 +36,7 @@ export function Hero() {
 
       <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 pb-20 pt-16 sm:px-6 sm:pt-20 lg:grid-cols-[0.9fr_1.1fr] lg:px-8 lg:pb-28 lg:pt-24">
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 0 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
           className="max-w-2xl"

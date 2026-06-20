@@ -125,7 +125,7 @@ export function CorrectionsSection() {
               >
                 {isResolved ? (
                   <>
-                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.1 }}>
+                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ duration: 0.3, delay: 0.1 }}>
                       <CheckCircle2 aria-hidden="true" size={18} strokeWidth={2} />
                     </motion.div>
                     Resuelto con éxito

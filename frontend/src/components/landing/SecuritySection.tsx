@@ -36,7 +36,7 @@ export function SecuritySection() {
         <div className="grid gap-6 md:grid-cols-3">
           {safeguards.map(({ icon: Icon, title, text }, index) => (
             <motion.article 
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 0 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-100px" }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -55,7 +55,7 @@ export function SecuritySection() {
         </div>
 
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 0 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.5, delay: 0.3 }}

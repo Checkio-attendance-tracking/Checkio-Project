@@ -26,7 +26,7 @@ export function FeaturesSection() {
           
           {/* 1. Geocercas (Hero Feature) */}
           <motion.article 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 0 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.5 }}
@@ -58,7 +58,7 @@ export function FeaturesSection() {
 
           {/* 2. Hora Oficial */}
           <motion.article 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 0 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.5, delay: 0.1 }}
@@ -76,7 +76,7 @@ export function FeaturesSection() {
 
           {/* 3. Planilla XLSX */}
           <motion.article 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 0 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.5, delay: 0.2 }}
@@ -94,7 +94,7 @@ export function FeaturesSection() {
 
           {/* 4. Historial Visible */}
           <motion.article 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 0 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.5, delay: 0.1 }}
@@ -113,7 +113,7 @@ export function FeaturesSection() {
 
           {/* 5. Sin hardware */}
           <motion.article 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 0 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.5, delay: 0.2 }}
@@ -133,7 +133,7 @@ export function FeaturesSection() {
 
           {/* 6. Actividad Centralizada */}
           <motion.article 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 0 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.5, delay: 0.3 }}
