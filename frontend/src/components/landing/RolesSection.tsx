@@ -1,5 +1,6 @@
 import { Building2, CheckCircle2, ClipboardCheck, LayoutDashboard, UserRound } from 'lucide-react';
 import { SectionHeading } from './SectionHeading';
+import { motion } from 'framer-motion';
 
 const roles = [
   {
@@ -7,65 +8,77 @@ const roles = [
     title: 'Empleado',
     label: 'Operación diaria',
     items: ['Marca ingreso, almuerzo y salida', 'Consulta su historial', 'Solicita correcciones con contexto'],
+    color: 'slate',
   },
   {
     icon: ClipboardCheck,
-    title: 'RRHH / Admin',
+    title: 'Recursos Humanos',
     label: 'Control y revisión',
     items: ['Revisa asistencia del equipo', 'Gestiona planilla y correcciones', 'Configura la geocerca de la empresa'],
-  },
-  {
-    icon: Building2,
-    title: 'Superadmin',
-    label: 'Gestión de organizaciones',
-    items: ['Administra empresas registradas', 'Controla accesos administrativos', 'Supervisa capacidad por organización'],
+    color: 'indigo',
   },
 ];
 
 export function RolesSection() {
   return (
-    <div className="border-y border-slate-200 bg-white py-20 sm:py-24">
+    <div className="py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between mb-16">
           <SectionHeading
             eyebrow="Roles"
             title="Una vista adecuada para cada responsabilidad."
-            description="Checkio separa la experiencia diaria, la administración de RRHH y la gestión de organizaciones sin mezclar tareas."
+            description="Checkio separa la experiencia diaria de la administración de RRHH, asegurando que cada rol solo vea lo que necesita."
           />
-          <div className="inline-flex w-fit items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-            <LayoutDashboard aria-hidden="true" className="text-indigo-600" size={18} />
+          <div className="inline-flex w-fit items-center gap-2 rounded-xl border border-slate-200/60 bg-white/60 px-5 py-3 text-sm font-semibold text-slate-700 backdrop-blur-sm shadow-sm">
+            <LayoutDashboard aria-hidden="true" className="text-indigo-600" size={20} strokeWidth={1.5} />
             Accesos definidos por rol
           </div>
         </div>
 
-        <div className="mt-12 grid gap-4 lg:grid-cols-3">
-          {roles.map(({ icon: Icon, title, label, items }, index) => (
-            <article
-              key={title}
-              className={`rounded-2xl border p-6 ${index === 1 ? 'border-indigo-300 bg-indigo-50/60' : 'border-slate-200 bg-white'}`}
-            >
-              <div className="flex items-center justify-between">
-                <div className={`flex h-11 w-11 items-center justify-center rounded-lg ${index === 1 ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700'}`}>
-                  <Icon aria-hidden="true" size={22} />
+        <div className="grid gap-6 lg:grid-cols-2 lg:max-w-4xl lg:mx-auto">
+          {roles.map(({ icon: Icon, title, label, items, color }, index) => {
+            const isHighlight = color === 'indigo';
+            return (
+              <motion.article
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                key={title}
+                className={`group flex flex-col justify-between rounded-[2.5rem] border p-8 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.08)] ${
+                  isHighlight 
+                    ? 'border-indigo-200/60 bg-gradient-to-b from-indigo-50/80 to-white shadow-sm' 
+                    : 'border-slate-200/60 bg-white/80 backdrop-blur-md shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)]'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-8">
+                    <div className={`flex h-14 w-14 items-center justify-center rounded-2xl transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3 ${
+                      isHighlight ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-100 text-slate-700 ring-1 ring-slate-200'
+                    }`}>
+                      <Icon aria-hidden="true" size={26} strokeWidth={1.5} />
+                    </div>
+                    <div className="inline-flex items-center gap-4">
+                      <span className={`h-px w-6 sm:w-10 ${isHighlight ? 'bg-indigo-300' : 'bg-slate-300'}`} aria-hidden="true" />
+                      <span className={`text-[11px] font-bold uppercase tracking-widest ${isHighlight ? 'text-indigo-600' : 'text-slate-500'}`}>
+                        {label}
+                      </span>
+                    </div>
+                  </div>
+                  <h3 className="text-2xl font-bold tracking-tight text-slate-900">{title}</h3>
                 </div>
-                <div className="inline-flex items-center gap-4">
-                  <span className={`h-px w-6 sm:w-10 ${index === 1 ? 'bg-indigo-400/70' : 'bg-slate-300'}`} aria-hidden="true" />
-                  <span className={`text-[13px] font-bold uppercase tracking-[0.12em] md:text-sm ${index === 1 ? 'text-indigo-600' : 'text-slate-500'}`}>
-                    {label}
-                  </span>
-                </div>
-              </div>
-              <h3 className="mt-8 text-xl font-semibold text-slate-950">{title}</h3>
-              <ul className="mt-5 space-y-3">
-                {items.map((item) => (
-                  <li key={item} className="flex gap-3 text-sm leading-6 text-slate-600">
-                    <CheckCircle2 aria-hidden="true" className="mt-1 shrink-0 text-cyan-700" size={16} />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </article>
-          ))}
+                
+                <ul className="mt-8 space-y-4">
+                  {items.map((item) => (
+                    <li key={item} className="flex gap-3 text-base leading-relaxed text-slate-600">
+                      <CheckCircle2 aria-hidden="true" className={`mt-0.5 shrink-0 ${isHighlight ? 'text-indigo-600' : 'text-cyan-600'}`} size={20} strokeWidth={1.5} />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </motion.article>
+            );
+          })}
         </div>
       </div>
     </div>

@@ -17,12 +17,12 @@ export function LandingNav() {
       >
         Saltar al contenido
       </a>
-      <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-[#fcfbf7]/95 backdrop-blur">
+      <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/80 backdrop-blur-md">
         <nav
           aria-label="Navegación principal"
-          className="mx-auto flex h-18 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8"
+          className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8"
         >
-          <a href="/landing" className="flex min-h-11 items-center gap-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+          <a href="/landing" className="flex min-h-12 items-center gap-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
             <Logo size={36} />
             <div className="flex flex-col">
               <span className="text-lg font-bold leading-tight tracking-tight text-slate-950">Checkio</span>
@@ -44,7 +44,7 @@ export function LandingNav() {
 
           <a
             href="mailto:contact.orbitalframeworks@gmail.com?subject=Demo%20Checkio%20-%20Solicitud%20de%20informaci%C3%B3n"
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 text-sm font-semibold text-white shadow-sm transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
           >
             Solicitar demo
             <ArrowRight aria-hidden="true" size={16} />

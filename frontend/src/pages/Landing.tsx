@@ -5,22 +5,20 @@ import { GeofenceSection } from '../components/landing/GeofenceSection';
 import { Hero } from '../components/landing/Hero';
 import { LandingFooter } from '../components/landing/LandingFooter';
 import { LandingNav } from '../components/landing/LandingNav';
-import { ProblemSection, SolutionSection } from '../components/landing/ProblemSolution';
+import { ProblemSolution } from '../components/landing/ProblemSolution';
 import { RolesSection } from '../components/landing/RolesSection';
 import { SecuritySection } from '../components/landing/SecuritySection';
 import { FaqSection } from '../components/landing/FaqSection';
 
 export function Landing() {
   return (
-    <div className="landing-page min-h-screen overflow-x-hidden bg-[#fcfbf7] text-slate-950 antialiased selection:bg-indigo-200 selection:text-indigo-950">
+    <div className="landing-page min-h-screen overflow-x-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-white to-slate-50 text-slate-900 antialiased selection:bg-indigo-200 selection:text-indigo-950">
       <LandingNav />
       <main id="contenido-principal">
         <Hero />
-        <section id="problema" aria-label="Problemas del control de asistencia">
-          <ProblemSection />
-        </section>
-        <section id="solucion" aria-label="Solución Checkio" className="scroll-mt-18">
-          <SolutionSection />
+        <section id="problema" aria-label="El Problema y la Solución">
+          <div id="solucion" />
+          <ProblemSolution />
         </section>
         <section id="funcionalidades" aria-label="Funcionalidades" className="scroll-mt-18">
           <FeaturesSection />

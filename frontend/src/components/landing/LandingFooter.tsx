@@ -3,7 +3,7 @@ import { Logo } from '../Logo';
 
 export function LandingFooter() {
   return (
-    <footer className="border-t border-slate-200 bg-[#fcfbf7]">
+    <footer className="border-t border-slate-200/60">
       <div className="mx-auto grid max-w-7xl gap-12 px-4 py-12 sm:px-6 lg:grid-cols-[2fr_1fr_1fr] lg:px-8 lg:py-16">
         <div>
           <div className="flex items-center gap-3">
@@ -52,7 +52,7 @@ export function LandingFooter() {
         </div>
       </div>
       
-      <div className="border-t border-slate-200">
+      <div className="border-t border-slate-200/60">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <p>© {new Date().getFullYear()} Checkio. Todos los derechos reservados. Desarrollado por Orbital Frameworks.</p>
           <div className="flex gap-4">

@@ -1,5 +1,6 @@
 import { KeyRound, MapPinCheck, ShieldCheck } from 'lucide-react';
 import { SectionHeading } from './SectionHeading';
+import { motion } from 'framer-motion';
 
 const safeguards = [
   {
@@ -21,41 +22,60 @@ const safeguards = [
 
 export function SecuritySection() {
   return (
-    <div className="bg-[#fcfbf7] py-20 sm:py-24">
+    <div className="py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <SectionHeading
-          eyebrow="Seguridad y privacidad"
-          title="Controles concretos, explicados sin promesas absolutas."
-          description="Checkio combina acceso por roles, validación territorial y trazabilidad para que el control sea comprensible tanto para la empresa como para sus empleados."
-          align="center"
-        />
+        <div className="mb-16">
+          <SectionHeading
+            eyebrow="Seguridad y privacidad"
+            title="Controles concretos y trazables."
+            description="Checkio combina acceso por roles, validación territorial y trazabilidad para que el control sea comprensible tanto para la empresa como para sus empleados."
+            align="center"
+          />
+        </div>
 
-        <div className="mt-12 grid gap-4 md:grid-cols-3">
-          {safeguards.map(({ icon: Icon, title, text }) => (
-            <article key={title} className="rounded-2xl border border-slate-200 bg-white p-6">
-              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-indigo-50 text-indigo-700">
-                <Icon aria-hidden="true" size={22} />
+        <div className="grid gap-6 md:grid-cols-3">
+          {safeguards.map(({ icon: Icon, title, text }, index) => (
+            <motion.article 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              key={title} 
+              className="group flex flex-col justify-between rounded-[2rem] border border-slate-200/60 bg-white/80 p-8 backdrop-blur-sm transition-all duration-500 hover:-translate-y-2 hover:bg-white hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.08)]"
+            >
+              <div>
+                <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3">
+                  <Icon aria-hidden="true" size={26} strokeWidth={1.5} />
+                </div>
+                <h3 className="text-xl font-bold tracking-tight text-slate-900">{title}</h3>
+                <p className="mt-3 text-base leading-relaxed text-slate-600">{text}</p>
               </div>
-              <h3 className="mt-8 text-lg font-semibold text-slate-950">{title}</h3>
-              <p className="mt-3 text-sm leading-6 text-slate-600">{text}</p>
-            </article>
+            </motion.article>
           ))}
         </div>
 
-        <div className="mt-6 flex flex-col gap-4 rounded-xl border border-slate-200 bg-indigo-50/50 p-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-start gap-3">
-            <ShieldCheck aria-hidden="true" className="mt-0.5 shrink-0 text-indigo-600" size={20} />
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="mt-8 flex flex-col gap-6 rounded-[2rem] border border-indigo-100 bg-gradient-to-r from-indigo-50/50 to-white p-8 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-indigo-600 shadow-sm ring-1 ring-slate-200/60">
+              <ShieldCheck aria-hidden="true" size={24} strokeWidth={1.5} />
+            </div>
             <div>
-              <p className="text-sm font-semibold text-slate-950">Nota de privacidad</p>
-              <p className="mt-1 text-sm leading-6 text-slate-600">
+              <p className="text-base font-bold tracking-tight text-slate-900">Nota de privacidad</p>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600 max-w-3xl">
                 Checkio registra ubicación únicamente durante el proceso de marcación. No realiza rastreo continuo en segundo plano. Los datos de asistencia, ubicación y dispositivo se usan para validar registros laborales y brindar trazabilidad a la empresa administradora.
               </p>
             </div>
           </div>
-          <a href="/privacy" className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-            Ver política de privacidad
+          <a href="/privacy" className="inline-flex h-12 shrink-0 items-center justify-center rounded-xl bg-slate-900 px-6 text-sm font-semibold text-white shadow-sm transition-transform hover:scale-105 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+            Ver política
           </a>
-        </div>
+        </motion.div>
       </div>
     </div>
   );
