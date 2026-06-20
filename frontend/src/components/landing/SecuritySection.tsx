@@ -1,6 +1,6 @@
 import { KeyRound, MapPinCheck, ShieldCheck } from 'lucide-react';
 import { SectionHeading } from './SectionHeading';
-import { motion } from 'framer-motion';
+
 
 const safeguards = [
   {
@@ -34,12 +34,8 @@ export function SecuritySection() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-3">
-          {safeguards.map(({ icon: Icon, title, text }, index) => (
-            <motion.article 
-              initial={{ opacity: 0, y: 0 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "0px" }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
+          {safeguards.map(({ icon: Icon, title, text }) => (
+            <article
               key={title} 
               className="group flex flex-col justify-between rounded-[2rem] border border-slate-200/60 bg-white/80 p-8 backdrop-blur-sm transition-all duration-500 hover:-translate-y-2 hover:bg-white hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.08)]"
             >
@@ -50,15 +46,11 @@ export function SecuritySection() {
                 <h3 className="text-xl font-bold tracking-tight text-slate-900">{title}</h3>
                 <p className="mt-3 text-base leading-relaxed text-slate-600">{text}</p>
               </div>
-            </motion.article>
+            </article>
           ))}
         </div>
 
-        <motion.div 
-          initial={{ opacity: 0, y: 0 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "0px" }}
-          transition={{ duration: 0.5, delay: 0.3 }}
+        <div
           className="mt-8 flex flex-col gap-6 rounded-[2rem] border border-indigo-100 bg-gradient-to-r from-indigo-50/50 to-white p-8 sm:flex-row sm:items-center sm:justify-between"
         >
           <div className="flex items-start gap-4">
@@ -75,7 +67,7 @@ export function SecuritySection() {
           <a href="/privacy" className="inline-flex h-12 shrink-0 items-center justify-center rounded-xl bg-slate-900 px-6 text-sm font-semibold text-white shadow-sm transition-transform hover:scale-105 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
             Ver política
           </a>
-        </motion.div>
+        </div>
       </div>
     </div>
   );

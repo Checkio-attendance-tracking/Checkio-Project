@@ -5,11 +5,7 @@ export function CtaSection() {
   return (
     <div className="py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <motion.div 
-          initial={{ opacity: 0, y: 0 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "0px" }}
-          transition={{ duration: 0.5 }}
+        <div
           className="relative overflow-hidden rounded-[2.5rem] bg-indigo-600 px-6 py-16 text-white shadow-xl sm:px-10 lg:px-16 lg:py-20"
         >
           {/* Decorative Gradients */}
@@ -56,7 +52,7 @@ export function CtaSection() {
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   );

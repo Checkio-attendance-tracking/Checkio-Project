@@ -116,11 +116,12 @@ export function EmployeeList() {
       const rows = await attendanceService.getAll(monthDate, user.id);
       const XLSX = await import('xlsx');
       const records = rows.sort((a, b) => a.date.localeCompare(b.date));
+      const statusMap: Record<string, string> = { working: 'Trabajando', on_lunch: 'En Almuerzo', completed: 'Finalizado', pending: 'Pendiente', absent: 'Ausente' };
       const detailRows = records.map((r) => {
         const worked = workedMinutes(r);
         return {
           Fecha: r.date,
-          Estado: r.status,
+          Estado: statusMap[r.status] || r.status,
           Ingreso: r.checkIn || '',
           InicioAlmuerzo: r.lunchStart || '',
           FinAlmuerzo: r.lunchEnd || '',
@@ -182,7 +183,7 @@ export function EmployeeList() {
             Empleado: `${user.firstName} ${user.lastName}`,
             Correo: user.email,
             Fecha: r.date,
-            Estado: r.status,
+            Estado: ({ working: 'Trabajando', on_lunch: 'En Almuerzo', completed: 'Finalizado', pending: 'Pendiente', absent: 'Ausente' } as Record<string, string>)[r.status] || r.status,
             Ingreso: r.checkIn || '',
             InicioAlmuerzo: r.lunchStart || '',
             FinAlmuerzo: r.lunchEnd || '',
@@ -334,7 +335,7 @@ export function EmployeeList() {
                       </span>
                       <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 text-xs font-medium text-gray-700">
                         {user.role === 'admin' ? <Shield size={14} className="text-indigo-500" /> : <UserIcon size={14} />}
-                        <span className="capitalize">{user.role === 'admin' ? 'RRHH' : user.role}</span>
+                        <span className="capitalize">{user.role === 'admin' ? 'RRHH' : user.role === 'employee' ? 'Empleado' : user.role}</span>
                       </span>
                       <span className="text-xs text-gray-500">
                         {user.department}
@@ -384,7 +385,7 @@ export function EmployeeList() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{user.department}</div>
-                      <div className="text-xs text-gray-500">Incorporado: {user.joinDate}</div>
+                      <div className="text-xs text-gray-500">Incorporado: {user.joinDate ? format(new Date(user.joinDate), 'dd/MM/yyyy') : ''}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -398,7 +399,7 @@ export function EmployeeList() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center space-x-1 text-sm text-gray-600">
                         {user.role === 'admin' ? <Shield size={16} className="text-indigo-500" /> : <UserIcon size={16} />}
-                        <span className="capitalize">{user.role === 'admin' ? 'RRHH' : user.role}</span>
+                        <span className="capitalize">{user.role === 'admin' ? 'RRHH' : user.role === 'employee' ? 'Empleado' : user.role}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

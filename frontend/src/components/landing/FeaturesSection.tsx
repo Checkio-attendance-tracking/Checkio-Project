@@ -1,5 +1,5 @@
 import { Clock3, FileSpreadsheet, History, MapPin, RadioTower, Smartphone } from 'lucide-react';
-import { motion } from 'framer-motion';
+
 
 export function FeaturesSection() {
   return (
@@ -25,11 +25,7 @@ export function FeaturesSection() {
         <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4 lg:grid-rows-3 md:auto-rows-[280px]">
           
           {/* 1. Geocercas (Hero Feature) */}
-          <motion.article 
-            initial={{ opacity: 0, y: 0 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "0px" }}
-            transition={{ duration: 0.5 }}
+          <article
             className="group relative flex flex-col justify-between overflow-hidden rounded-[2.5rem] border border-slate-200/60 bg-white/90 p-8 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] backdrop-blur-md transition-all hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.08)] md:col-span-2 lg:col-span-2 lg:row-span-2"
           >
             <div className="relative z-10 max-w-md">
@@ -54,14 +50,10 @@ export function FeaturesSection() {
                 </div>
               </div>
             </div>
-          </motion.article>
+          </article>
 
           {/* 2. Hora Oficial */}
-          <motion.article 
-            initial={{ opacity: 0, y: 0 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "0px" }}
-            transition={{ duration: 0.5, delay: 0.1 }}
+          <article
             className="group relative flex flex-col justify-between overflow-hidden rounded-[2.5rem] border border-slate-200/60 bg-slate-900 p-8 shadow-sm transition-all hover:shadow-md lg:col-span-1 lg:row-span-1"
           >
             <div>
@@ -72,14 +64,10 @@ export function FeaturesSection() {
             <p className="mt-6 font-mono text-5xl font-light tabular-nums tracking-tighter text-white opacity-90 transition-transform duration-500 group-hover:scale-105 group-hover:text-cyan-300 origin-left">
               08:30
             </p>
-          </motion.article>
+          </article>
 
           {/* 3. Planilla XLSX */}
-          <motion.article 
-            initial={{ opacity: 0, y: 0 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "0px" }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+          <article
             className="group relative flex flex-col justify-between overflow-hidden rounded-[2.5rem] border border-cyan-100/60 bg-gradient-to-br from-cyan-50 to-white p-8 shadow-sm transition-all hover:shadow-md lg:col-span-1 lg:row-span-1"
           >
             <div>
@@ -90,14 +78,10 @@ export function FeaturesSection() {
             <div className="mt-4 flex h-12 w-full items-center justify-center rounded-xl bg-white border border-cyan-100 shadow-sm transition-transform duration-500 group-hover:scale-105">
               <span className="text-xs font-bold text-cyan-700 tracking-wider">↓ DESCARGAR</span>
             </div>
-          </motion.article>
+          </article>
 
           {/* 4. Historial Visible */}
-          <motion.article 
-            initial={{ opacity: 0, y: 0 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "0px" }}
-            transition={{ duration: 0.5, delay: 0.1 }}
+          <article
             className="group relative flex flex-col justify-between overflow-hidden rounded-[2.5rem] border border-slate-200/60 bg-white p-8 shadow-sm transition-all hover:shadow-md lg:col-span-1 lg:row-span-1"
           >
             <div>
@@ -109,14 +93,10 @@ export function FeaturesSection() {
               <div className="h-2 w-full rounded-full bg-slate-100" />
               <div className="h-2 w-2/3 rounded-full bg-indigo-100" />
             </div>
-          </motion.article>
+          </article>
 
           {/* 5. Sin hardware */}
-          <motion.article 
-            initial={{ opacity: 0, y: 0 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "0px" }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+          <article
             className="group relative flex flex-col justify-between overflow-hidden rounded-[2.5rem] border border-slate-200/60 bg-white p-8 shadow-sm transition-all hover:shadow-md lg:col-span-1 lg:row-span-1"
           >
             <div>
@@ -129,14 +109,10 @@ export function FeaturesSection() {
                 <span className="h-2 w-2 rounded-full bg-indigo-400" />
               </div>
             </div>
-          </motion.article>
+          </article>
 
           {/* 6. Actividad Centralizada */}
-          <motion.article 
-            initial={{ opacity: 0, y: 0 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "0px" }}
-            transition={{ duration: 0.5, delay: 0.3 }}
+          <article
             className="group relative flex flex-col md:flex-row overflow-hidden rounded-[2.5rem] border border-indigo-100/60 bg-gradient-to-r from-indigo-50/80 to-white p-8 shadow-sm transition-all hover:shadow-md lg:col-span-4 lg:row-span-1 items-center gap-8"
           >
             <div className="flex-1">
@@ -172,7 +148,7 @@ export function FeaturesSection() {
                 </div>
               </div>
             </div>
-          </motion.article>
+          </article>
 
         </div>
       </div>

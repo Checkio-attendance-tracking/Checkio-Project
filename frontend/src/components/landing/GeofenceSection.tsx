@@ -6,11 +6,7 @@ export function GeofenceSection() {
   return (
     <div className="py-24 sm:py-32">
       <div className="mx-auto grid max-w-7xl gap-16 px-4 sm:px-6 lg:grid-cols-2 lg:items-center lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, x: 0 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true, margin: "0px" }}
-          transition={{ duration: 0.6 }}
+        <div
         >
           <SectionHeading
             eyebrow="Geocerca y trazabilidad"
@@ -35,13 +31,9 @@ export function GeofenceSection() {
             <p className="text-base font-bold tracking-tight text-slate-900">Privacidad operativa</p>
             <p className="mt-2 text-sm leading-relaxed text-slate-600">La ubicación se solicita para registrar el evento de asistencia, no para seguir desplazamientos continuos ni invadir la privacidad personal fuera del horario laboral.</p>
           </div>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true, margin: "0px" }}
-          transition={{ duration: 0.6, delay: 0.2 }}
+        <div
           className="rounded-[2.5rem] border border-slate-200/60 bg-white/80 p-4 shadow-[0_20px_55px_-40px_rgba(15,23,42,0.45)] backdrop-blur-md"
         >
           <div className="flex items-center justify-between border-b border-slate-100 px-4 py-4 mb-2">
@@ -77,7 +69,7 @@ export function GeofenceSection() {
               Radio ajustable
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   );

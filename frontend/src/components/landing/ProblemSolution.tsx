@@ -102,18 +102,14 @@ export function ProblemSolution() {
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
-              initial={{ opacity: 0, y: 0 }}
-              animate={{ opacity: 1, y: 0 }}
+              
               exit={{ opacity: 0, y: 0 }}
-              transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
               className="grid gap-6 sm:grid-cols-3"
             >
-              {content[activeTab].map(({ icon: Icon, title, text, color, bg, border }, index) => (
-                <motion.article 
+              {content[activeTab].map(({ icon: Icon, title, text, color, bg, border }) => (
+                <article 
                   key={title}
-                  initial={{ opacity: 0, y: 0 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.1, ease: [0.4, 0, 0.2, 1] }}
+                  
                   className={`group overflow-hidden rounded-3xl border ${border} ${bg} p-8 backdrop-blur-sm transition-all hover:shadow-md hover:bg-white/90`}
                 >
                   <div className={`mb-6 inline-flex rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-900/5 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3`}>
@@ -121,7 +117,7 @@ export function ProblemSolution() {
                   </div>
                   <h3 className="mb-3 text-lg font-semibold text-slate-900 tracking-tight">{title}</h3>
                   <p className="text-base leading-relaxed text-slate-600">{text}</p>
-                </motion.article>
+                </article>
               ))}
             </motion.div>
           </AnimatePresence>

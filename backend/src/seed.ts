@@ -62,7 +62,7 @@ const seed = async () => {
 
     const qaCompany = await tx.company.create({
       data: {
-        name: "QA Company",
+        name: "Acme Corp",
         maxEmployees: 50,
         status: "active",
         geofenceEnabled: false,
@@ -75,7 +75,7 @@ const seed = async () => {
     const rrhh = await tx.user.create({
       data: {
         companyId: qaCompany.id,
-        name: "Recursos Humanos QA",
+        name: "Recursos Humanos",
         email: "rrhh.qa@checkio.pe",
         passwordHash: qaPasswordHash,
         role: "admin",
@@ -86,9 +86,9 @@ const seed = async () => {
       data: {
         companyId: qaCompany.id,
         firstName: "Juan",
-        lastName: "QA",
+        lastName: "Pérez",
         email: "juan.qa@checkio.pe",
-        department: "QA",
+        department: "Operaciones",
         joinDate: utcMidnight("2026-01-10"),
         status: "active",
         workplace: "Oficina Central",
@@ -108,10 +108,10 @@ const seed = async () => {
     const employee2 = await tx.employee.create({
       data: {
         companyId: qaCompany.id,
-        firstName: "María",
-        lastName: "QA",
+        firstName: "Ana",
+        lastName: "Gómez",
         email: "maria.qa@checkio.pe",
-        department: "QA",
+        department: "Ventas",
         joinDate: utcMidnight("2026-02-05"),
         status: "active",
         workplace: "Oficina Central",
@@ -156,7 +156,7 @@ const seed = async () => {
         markType: "checkIn",
         requestedTime: "08:00",
         previousTimeAtRequest: "08:10",
-        reason: "Prueba QA: ajuste de hora de ingreso",
+        reason: "Ajuste de hora de ingreso por fallo de red",
         status: "pending",
       },
     });
@@ -194,11 +194,11 @@ const seed = async () => {
         requestedTime: "18:00",
         previousTimeAtRequest: "17:30",
         previousTimeApplied: "17:30",
-        reason: "Prueba QA: hora extra registrada",
+        reason: "Hora extra autorizada por gerencia",
         status: "approved",
         reviewedByUserId: rrhh.id,
         reviewedAt: new Date(),
-        reviewComment: "QA: aprobado",
+        reviewComment: "Aprobado",
       },
     });
 
@@ -219,8 +219,8 @@ const seed = async () => {
         companyId: qaCompany.id,
         toUserId: employeeUser1.id,
         type: "generic",
-        title: "Bienvenido a QA",
-        body: "Notificación de prueba para validar la campana.",
+        title: "Bienvenido a Acme Corp",
+        body: "Revisa tu horario y marca tu asistencia desde el botón central.",
         link: "/dashboard/history",
       },
     });
@@ -228,9 +228,9 @@ const seed = async () => {
 
   console.log("Seed listo.");
   console.log("Superadmin:", superAdminEmail, "password: superadmin123");
-  console.log("Recursos Humanos QA:", "rrhh.qa@checkio.pe", "password: qa123456");
-  console.log("Empleado QA 1:", "juan.qa@checkio.pe", "password: qa123456");
-  console.log("Empleado QA 2:", "maria.qa@checkio.pe", "password: qa123456");
+  console.log("Recursos Humanos:", "rrhh.qa@checkio.pe", "password: qa123456");
+  console.log("Empleado 1 (Juan):", "juan.qa@checkio.pe", "password: qa123456");
+  console.log("Empleado 2 (Ana):", "maria.qa@checkio.pe", "password: qa123456");
 };
 
 seed()

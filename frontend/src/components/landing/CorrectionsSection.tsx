@@ -1,7 +1,7 @@
 import { Check, ClipboardPenLine, SearchCheck, CheckCircle2 } from 'lucide-react';
 import { SectionHeading } from './SectionHeading';
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { useRef, useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+
 
 const steps = [
   { number: '01', title: 'Solicitar', text: 'El empleado identifica la marcación y explica el ajuste requerido desde la app móvil.' },
@@ -10,29 +10,10 @@ const steps = [
 ];
 
 export function CorrectionsSection() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start 60%", "end 60%"]
-  });
-
-  const lineHeight = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
-  const [isResolved, setIsResolved] = useState(false);
-
-  useEffect(() => {
-    const unsubscribe = scrollYProgress.on("change", (latest) => {
-      if (latest > 0.65 && !isResolved) {
-        setIsResolved(true);
-      } else if (latest <= 0.65 && isResolved) {
-        setIsResolved(false);
-      }
-    });
-    return () => unsubscribe();
-  }, [scrollYProgress, isResolved]);
+  const isResolved = false;
 
   return (
-    <div className="border-t border-slate-200/60 py-24 sm:py-32" ref={containerRef}>
+    <div className="border-t border-slate-200/60 py-24 sm:py-32" >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid gap-16 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div>
@@ -48,7 +29,7 @@ export function CorrectionsSection() {
               {/* Animated Progress Line */}
               <motion.div 
                 className="absolute left-[11px] top-2 bottom-2 w-[2px] bg-indigo-500 origin-top"
-                style={{ scaleY: lineHeight }}
+                style={{ scaleY: 1 }}
               />
               
               <ol className="space-y-12">
@@ -71,7 +52,6 @@ export function CorrectionsSection() {
               <div className="flex items-center gap-4">
                 <motion.div 
                   animate={{ backgroundColor: isResolved ? "#10b981" : "#4f46e5" }}
-                  transition={{ duration: 0.4 }}
                   className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-white shadow-sm"
                 >
                   <ClipboardPenLine aria-hidden="true" size={24} strokeWidth={1.5} />
@@ -125,7 +105,7 @@ export function CorrectionsSection() {
               >
                 {isResolved ? (
                   <>
-                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ duration: 0.3, delay: 0.1 }}>
+                    <motion.div animate={{ scale: 1 }} transition={{ duration: 0.3, delay: 0.1 }}>
                       <CheckCircle2 aria-hidden="true" size={18} strokeWidth={2} />
                     </motion.div>
                     Resuelto con éxito

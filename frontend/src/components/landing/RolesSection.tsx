@@ -1,6 +1,6 @@
 import { CheckCircle2, ClipboardCheck, LayoutDashboard, UserRound } from 'lucide-react';
 import { SectionHeading } from './SectionHeading';
-import { motion } from 'framer-motion';
+
 
 const roles = [
   {
@@ -36,14 +36,10 @@ export function RolesSection() {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2 lg:max-w-4xl lg:mx-auto">
-          {roles.map(({ icon: Icon, title, label, items, color }, index) => {
+          {roles.map(({ icon: Icon, title, label, items, color }) => {
             const isHighlight = color === 'indigo';
             return (
-              <motion.article
-                initial={{ opacity: 0, y: 0 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "0px" }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
+              <article
                 key={title}
                 className={`group flex flex-col justify-between rounded-[2.5rem] border p-8 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.08)] ${
                   isHighlight 
@@ -76,7 +72,7 @@ export function RolesSection() {
                     </li>
                   ))}
                 </ul>
-              </motion.article>
+              </article>
             );
           })}
         </div>
