@@ -9,7 +9,7 @@ export function GeofenceSection() {
         <motion.div
           initial={{ opacity: 0, x: 0 }}
           whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, margin: "0px" }}
           transition={{ duration: 0.6 }}
         >
           <SectionHeading
@@ -40,7 +40,7 @@ export function GeofenceSection() {
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, margin: "0px" }}
           transition={{ duration: 0.6, delay: 0.2 }}
           className="rounded-[2.5rem] border border-slate-200/60 bg-white/80 p-4 shadow-[0_20px_55px_-40px_rgba(15,23,42,0.45)] backdrop-blur-md"
         >

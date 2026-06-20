@@ -87,9 +87,9 @@ export function Hero() {
         <div className="relative mx-auto w-full max-w-3xl pb-20 sm:pb-24 lg:pb-16" style={{ perspective: 1200 }}>
           <motion.div 
             style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1, ease: [0.4, 0, 0.2, 1], delay: 0.2 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1, ease: [0.4, 0, 0.2, 1] }}
             className="relative h-full w-full"
           >
             <div className="overflow-hidden rounded-3xl border border-slate-200/60 bg-white/90 p-2 shadow-[0_24px_70px_-38px_rgba(15,23,42,0.5)] backdrop-blur" style={{ transform: "translateZ(0px)" }}>

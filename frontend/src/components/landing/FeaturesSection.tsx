@@ -28,7 +28,7 @@ export function FeaturesSection() {
           <motion.article 
             initial={{ opacity: 0, y: 0 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
+            viewport={{ once: true, margin: "0px" }}
             transition={{ duration: 0.5 }}
             className="group relative flex flex-col justify-between overflow-hidden rounded-[2.5rem] border border-slate-200/60 bg-white/90 p-8 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.03)] backdrop-blur-md transition-all hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.08)] md:col-span-2 lg:col-span-2 lg:row-span-2"
           >
@@ -60,7 +60,7 @@ export function FeaturesSection() {
           <motion.article 
             initial={{ opacity: 0, y: 0 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
+            viewport={{ once: true, margin: "0px" }}
             transition={{ duration: 0.5, delay: 0.1 }}
             className="group relative flex flex-col justify-between overflow-hidden rounded-[2.5rem] border border-slate-200/60 bg-slate-900 p-8 shadow-sm transition-all hover:shadow-md lg:col-span-1 lg:row-span-1"
           >
@@ -78,7 +78,7 @@ export function FeaturesSection() {
           <motion.article 
             initial={{ opacity: 0, y: 0 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
+            viewport={{ once: true, margin: "0px" }}
             transition={{ duration: 0.5, delay: 0.2 }}
             className="group relative flex flex-col justify-between overflow-hidden rounded-[2.5rem] border border-cyan-100/60 bg-gradient-to-br from-cyan-50 to-white p-8 shadow-sm transition-all hover:shadow-md lg:col-span-1 lg:row-span-1"
           >
@@ -96,7 +96,7 @@ export function FeaturesSection() {
           <motion.article 
             initial={{ opacity: 0, y: 0 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
+            viewport={{ once: true, margin: "0px" }}
             transition={{ duration: 0.5, delay: 0.1 }}
             className="group relative flex flex-col justify-between overflow-hidden rounded-[2.5rem] border border-slate-200/60 bg-white p-8 shadow-sm transition-all hover:shadow-md lg:col-span-1 lg:row-span-1"
           >
@@ -115,7 +115,7 @@ export function FeaturesSection() {
           <motion.article 
             initial={{ opacity: 0, y: 0 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
+            viewport={{ once: true, margin: "0px" }}
             transition={{ duration: 0.5, delay: 0.2 }}
             className="group relative flex flex-col justify-between overflow-hidden rounded-[2.5rem] border border-slate-200/60 bg-white p-8 shadow-sm transition-all hover:shadow-md lg:col-span-1 lg:row-span-1"
           >
@@ -135,7 +135,7 @@ export function FeaturesSection() {
           <motion.article 
             initial={{ opacity: 0, y: 0 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
+            viewport={{ once: true, margin: "0px" }}
             transition={{ duration: 0.5, delay: 0.3 }}
             className="group relative flex flex-col md:flex-row overflow-hidden rounded-[2.5rem] border border-indigo-100/60 bg-gradient-to-r from-indigo-50/80 to-white p-8 shadow-sm transition-all hover:shadow-md lg:col-span-4 lg:row-span-1 items-center gap-8"
           >

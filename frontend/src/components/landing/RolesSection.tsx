@@ -42,7 +42,7 @@ export function RolesSection() {
               <motion.article
                 initial={{ opacity: 0, y: 0 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
+                viewport={{ once: true, margin: "0px" }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 key={title}
                 className={`group flex flex-col justify-between rounded-[2.5rem] border p-8 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.08)] ${

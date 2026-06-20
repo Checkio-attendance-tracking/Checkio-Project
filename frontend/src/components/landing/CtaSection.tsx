@@ -8,7 +8,7 @@ export function CtaSection() {
         <motion.div 
           initial={{ opacity: 0, y: 0 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, margin: "0px" }}
           transition={{ duration: 0.5 }}
           className="relative overflow-hidden rounded-[2.5rem] bg-indigo-600 px-6 py-16 text-white shadow-xl sm:px-10 lg:px-16 lg:py-20"
         >

@@ -38,7 +38,7 @@ export function SecuritySection() {
             <motion.article 
               initial={{ opacity: 0, y: 0 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
+              viewport={{ once: true, margin: "0px" }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
               key={title} 
               className="group flex flex-col justify-between rounded-[2rem] border border-slate-200/60 bg-white/80 p-8 backdrop-blur-sm transition-all duration-500 hover:-translate-y-2 hover:bg-white hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.08)]"
@@ -57,7 +57,7 @@ export function SecuritySection() {
         <motion.div 
           initial={{ opacity: 0, y: 0 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, margin: "0px" }}
           transition={{ duration: 0.5, delay: 0.3 }}
           className="mt-8 flex flex-col gap-6 rounded-[2rem] border border-indigo-100 bg-gradient-to-r from-indigo-50/50 to-white p-8 sm:flex-row sm:items-center sm:justify-between"
         >
